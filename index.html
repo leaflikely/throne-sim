@@ -84,8 +84,8 @@ button{font-family:inherit;cursor:pointer}
 /* ── Ability grid ── */
 .agrid{
   display:grid;
-  grid-template-columns:repeat(8,1fr);
-  grid-template-rows:1fr 1fr;
+  grid-template-columns:repeat(8,minmax(0,1fr));
+  grid-template-rows:minmax(0,1fr) minmax(0,1fr);
   gap:4px;height:100%;padding:4px;background:#060810;
 }
 /* Sub-ability module — a full separate card in row 2 of its column */
@@ -170,6 +170,12 @@ button{font-family:inherit;cursor:pointer}
 #p1hand{bottom:0;border-top:1px solid var(--bdr)}
 #p2hand{top:46px;border-top:none;border-bottom:1px solid var(--bdr);align-items:flex-end}
 #p1hand.snap-over,#p2hand.snap-over{background:#0A1828;outline:1px solid var(--teal)}
+/* Flipped view — used when THIS browser is Player 2, so P2 always sits at the bottom */
+.flip #center-block{flex-direction:column-reverse}
+.flip #midsec{flex-direction:column-reverse}
+.flip #right-panel{flex-direction:column-reverse}
+.flip #p1hand{top:46px;bottom:auto;border-top:none;border-bottom:1px solid var(--bdr);align-items:flex-end}
+.flip #p2hand{bottom:0;top:auto;border-bottom:none;border-top:1px solid var(--bdr);align-items:flex-start}
 .hcard{width:116px;height:calc(var(--hand-h) - 10px);border-radius:6px;border:1.5px solid;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:6px 5px 5px;position:relative;flex-shrink:0}
 .hcn{font-size:9px;font-weight:700;text-align:center;line-height:1.35;pointer-events:none;width:100%}
 .hcart{font-size:20px;line-height:1;pointer-events:none;text-align:center}
@@ -213,7 +219,6 @@ button{font-family:inherit;cursor:pointer}
 .btn:hover{border-color:var(--teal);color:var(--teal)}
 .btnt{border-color:var(--teal);color:var(--teal);background:#00C4A015}
 .btnt:disabled{border-color:var(--bdr);color:var(--txtd);background:transparent;cursor:not-allowed}
-#turnbanner{font-size:10px;font-weight:700;color:var(--teal);background:#00C4A015;border:1px solid var(--teal);border-radius:5px;padding:3px 10px}
 ::-webkit-scrollbar{width:4px;height:4px}
 ::-webkit-scrollbar-thumb{background:#283248;border-radius:3px}
 </style>
@@ -226,8 +231,6 @@ button{font-family:inherit;cursor:pointer}
     <span style="font-size:9px;color:var(--txtd);margin-left:8px" id="hdr-sub">Season Two</span>
   </div>
   <div style="display:flex;gap:7px;align-items:center">
-    <div id="turnbanner">P1'S TURN</div>
-    <button class="btn btnt" onclick="endTurn()">End Turn &rarr;</button>
     <button class="btn" onclick="flipView()">Flip View &#8645;</button>
     <span id="net-hud" style="font-size:9px;font-weight:700;color:var(--txt);letter-spacing:.5px"></span>
     <button class="btn" onclick="openNetPanel()">Multiplayer</button>
@@ -1273,10 +1276,10 @@ function updateDiscardDisplay(player){
 function updateDrawBtn(player){
   const P=S[player],char=S.chars[player],btn=document.getElementById(player+"draw");
   if(NET.on&&player!==NET.me){
-    // Opponent's deck lives in THEIR browser — we only know the count they sent
-    btn.textContent="Draw ("+(P.deckCount!=null?P.deckCount:P.deck.length)+")";
-    btn.disabled=true;return;
+    btn.style.display="none"; // opponent's deck is theirs to draw from — hide the button
+    return;
   }
+  btn.style.display="";
   btn.textContent="Draw ("+P.deck.length+")";btn.disabled=!char||!P.deck.length;
 }
 
@@ -1488,13 +1491,6 @@ function pullUpgradeCard(player,abilId){
   }
   netSendCards(player);
 }
-function endTurn(){
-  S.turn=S.turn==="p1"?"p2":"p1";
-  S[S.turn].hasRolled=false;
-  document.getElementById("turnbanner").textContent=S.turn.toUpperCase()+"'S TURN";
-  renderDice("p1");renderDice("p2");
-  netSend({t:"turn",v:S.turn});
-}
 function flipView(){S.view=S.view==="p1"?"p2":"p1";hideTooltip();}
 function resetGame(){
   if(!confirm("Start a new game? This clears both players."))return;
@@ -1513,7 +1509,6 @@ function doResetGame(){
   if(NET.room){
     try{localStorage.removeItem("dt_save_"+NET.room+"_p1");localStorage.removeItem("dt_save_"+NET.room+"_p2");}catch(e){}
   }
-  document.getElementById("turnbanner").textContent="P1'S TURN";
   document.getElementById("hdr-sub").textContent="Season Two";
   ["p1hp","p1cp","p2hp","p2cp"].forEach(id=>document.getElementById(id).textContent=id.includes("hp")?"50":"2");
   ["p1leaflet-btn","p2leaflet-btn"].forEach(id=>{const b=document.getElementById(id);if(b)b.style.display="none";});
@@ -1665,7 +1660,7 @@ window.addEventListener("resize",()=>autoSizeAbilCards());
 // joiner is P2 — and only broadcasts changes for the things it owns.
 // Hand contents are never sent: the opponent only ever sees a card count.
 
-const RELAY_URL=""; // optional: paste your worker URL here to pre-fill the panel
+const RELAY_URL="https://dice-throne-relay.danny61734.workers.dev"; // your deployed relay
 
 var NET={on:false,me:null,ws:null,room:null,applying:false,restore:null,
          pending:{p1:[],p2:[]},retry:null,wantOpen:false,seen:false};
@@ -1794,11 +1789,7 @@ function netApply(d){
       if(!S.chars[d.p]){NET.pending[d.p].push(d);break;}
       applyRemoteCards(d);
       break;}
-    case "turn":{
-      S.turn=d.v;if(S[d.v])S[d.v].hasRolled=false;
-      document.getElementById("turnbanner").textContent=S.turn.toUpperCase()+"'S TURN";
-      renderDice("p1");renderDice("p2");
-      break;}
+    case "turn":break; // turns are no longer tracked — screen stays static
     case "ov":{
       const tk=OV_TOKENS[d.id];
       if(tk){
@@ -1921,7 +1912,14 @@ function netDisconnect(){
 }
 
 // ── Panel + status readout ───────────────────────────────────────────────────
+function applyFlip(){
+  // When this browser plays P2, flip the whole board so P2 sits at the bottom
+  const app=document.getElementById("app");
+  if(app)app.classList.toggle("flip",NET.room!=null&&NET.me==="p2");
+  autoSizeAbilCards();
+}
 function updateNetHud(){
+  applyFlip();
   const hud=document.getElementById("net-hud");
   const leave=document.getElementById("net-leave");
   if(leave)leave.style.display=NET.room?"":"none";
