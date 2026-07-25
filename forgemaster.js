@@ -69,7 +69,7 @@ const ABIL=[
   {id:"masterwork",n:"MASTERWORK",c:"#1E6830",t:"def",defDice:1,
    req:[],
    fx:"On {P}, Mine your deck.\nOn {H}, double the effect of one Armor.\nOn {A}, double the effect of up to two different Armor."},
-  {id:"ult",    n:"FINAL TOUCHES!",c:"#906808",t:"ult",ultDice:5,pairWith:"smelt",searchSlot:true,
+  {id:"ult",    n:"FINAL TOUCHES!",c:"#906808",t:"ult",ultDice:5,pairWith:"smelt",searchSlot:true,rowGrow:1.5,
    req:[{type:"anvil",count:5}],hideReq:true,
    fx:"Search your deck for any one ORE.\nPlace it on THE FORGE.\n14 Undefendable"},
 ];
