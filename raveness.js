@@ -257,6 +257,7 @@ window.DT_CHARACTERS["raveness"] = {
   cardUpgrades:        CARD_UPGRADES,
   cards:               CARDS,
   faces:               FACES,
+  fxKeywords:          [["Activate Nevermore","#28A050"]],
   dieIcon:             dieIcon,
   renderTokens:        renderTokens,
   initTokenState:      initTokenState,
