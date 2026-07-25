@@ -31,13 +31,19 @@ button{font-family:inherit;cursor:pointer}
 /* Dice rows at top/bottom of play space */
 /* ── Dice Hand zones (top/bottom of play space) ── */
 .ps-hand-zone{width:100%;display:flex;flex-direction:column;gap:5px;padding:7px 10px;flex-shrink:0;border:1px solid var(--bdrhi);border-left:none;border-right:none;background:#07101E;position:relative}
+/* P1 (bottom zone): dice nearest the outer edge → dice row on top of the zone,
+   then HP/CP, then tokens nearest the tray. P2 (top zone) mirrors it. */
+#p1hand-zone{flex-direction:column}
+#p2hand-zone{flex-direction:column-reverse}
 .ps-tokens-row{display:flex;align-items:center;gap:10px;min-height:24px}
 .ps-stats-row{display:flex;align-items:center;gap:16px}
+/* dice line: the 5-die row plus the deck/discard/leaflet controls */
 .ps-dice-line{display:flex;align-items:center;gap:8px}
-.ps-dice-left{display:flex;flex-direction:column;align-items:flex-start;gap:3px;flex-shrink:0}
+.ps-dice-left{display:flex;flex-direction:column;align-items:center;gap:3px;flex-shrink:0}
 .ps-dice-right{display:flex;align-items:center;gap:8px;flex-shrink:0;margin-left:auto}
 .ps-hand-lbl{font-size:7px;font-weight:700;letter-spacing:1.5px;color:var(--txtd);white-space:nowrap;flex-shrink:0}
-.ps-dicerow{display:flex;flex-wrap:wrap;gap:5px;align-items:center;flex:1;min-width:0}
+/* single row of 5 dice — no wrapping */
+.ps-dicerow{display:flex;flex-wrap:nowrap;gap:5px;align-items:center;flex:1;min-width:0}
 .ps-all-btn{font-size:8px;font-weight:700;padding:3px 8px;border-radius:4px;border:1.5px solid var(--bdrhi);background:transparent;color:var(--txtd);cursor:pointer;white-space:nowrap;flex-shrink:0;transition:color .1s,border-color .1s}
 .ps-all-btn:hover{border-color:var(--teal);color:var(--teal)}
 /* Center area: tray + controls */
@@ -175,6 +181,12 @@ button{font-family:inherit;cursor:pointer}
 /* Flipped view — used when THIS browser is Player 2, so P2 always sits at the bottom */
 .flip #center-block{flex-direction:column-reverse}
 .flip #right-panel{flex-direction:column-reverse}
+/* Flipped: P2's zone is now at the bottom, so its dice should face the bottom
+   edge (column order); P1's zone is now at top and reverses. */
+.flip #p2hand-zone{flex-direction:column}
+.flip #p1hand-zone{flex-direction:column-reverse}
+.flip #p2hand-zone .ps-dice-stack{flex-direction:column!important}
+.flip #p1hand-zone .ps-dice-stack{flex-direction:column-reverse!important}
 .flip #p1hand{top:46px;bottom:auto;border-top:none;border-bottom:1px solid var(--bdr);align-items:flex-end}
 .flip #p2hand{bottom:0;top:auto;border-bottom:none;border-top:1px solid var(--bdr);align-items:flex-start}
 .hcard{width:116px;height:calc(var(--hand-h) - 10px);border-radius:6px;border:1.5px solid;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:6px 5px 5px;position:relative;flex-shrink:0}
@@ -286,11 +298,10 @@ button{font-family:inherit;cursor:pointer}
       </div></div>
     </div>
     <div class="ps-dice-line">
-      <div class="ps-dice-left">
-        <span class="ps-hand-lbl">DICE HAND · P2</span>
-        <button class="ps-all-btn" onclick="sendAllToTray('p2')" title="Send all dice to tray">ALL</button>
+      <div class="ps-dice-stack" style="display:flex;flex-direction:column-reverse;gap:3px;flex:1;min-width:0">
+        <button class="ps-all-btn" onclick="sendAllToTray('p2')" title="Send all dice to tray" style="align-self:flex-start">ALL</button>
+        <div class="ps-dicerow" id="p2dicerow-ps" data-player="p2"></div>
       </div>
-      <div class="ps-dicerow" id="p2dicerow-ps" data-player="p2"></div>
       <div class="ps-dice-right">
         <button class="btn" id="p2draw" onclick="drawCard('p2')">Draw</button>
         <div class="disc-pile" id="p2disc-pile" onclick="viewDiscard('p2')" title="View discard pile">
@@ -333,11 +344,10 @@ button{font-family:inherit;cursor:pointer}
       </div></div>
     </div>
     <div class="ps-dice-line">
-      <div class="ps-dice-left">
-        <span class="ps-hand-lbl">DICE HAND · P1</span>
-        <button class="ps-all-btn" onclick="sendAllToTray('p1')" title="Send all dice to tray">ALL</button>
+      <div class="ps-dice-stack" style="display:flex;flex-direction:column;gap:3px;flex:1;min-width:0">
+        <button class="ps-all-btn" onclick="sendAllToTray('p1')" title="Send all dice to tray" style="align-self:flex-start">ALL</button>
+        <div class="ps-dicerow" id="p1dicerow-ps" data-player="p1"></div>
       </div>
-      <div class="ps-dicerow" id="p1dicerow-ps" data-player="p1"></div>
       <div class="ps-dice-right">
         <button class="btn" id="p1draw" onclick="drawCard('p1')">Draw</button>
         <div class="disc-pile" id="p1disc-pile" onclick="viewDiscard('p1')" title="View discard pile">
