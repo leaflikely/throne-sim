@@ -37,7 +37,7 @@ const FACES=[null,
 const ABIL=[
   {id:"mines",  n:"THE MINES",   c:"#B07C18",t:"off",passive:true,req:[],
    fx:"During your upkeep, you may Mine your deck.\nOnce per turn, you may spend 3 CP at any time to draw 1."},
-  {id:"forge",  n:"THE FORGE",   c:"#C04030",t:"off",passive:true,req:[],
+  {id:"forge",  n:"THE FORGE",   c:"#C04030",t:"off",passive:true,forgeSlot:true,req:[],
    fx:"During your Main Phase, you may place any number of ORE from your hand on this passive ability."},
   {id:"pickaxe",n:"PICK AXE",    c:"#C87828",t:"off",
    req:[{type:"pickaxe",count:3}],hideReq:true,
@@ -82,12 +82,34 @@ const CARDS=[];
 (function(){
   const add=(kind,count)=>{
     const d=ORE_DEFS[kind];
-    for(let i=1;i<=count;i++)CARDS.push({id:kind+"_"+i,n:d.n,cp:0,t:d.t,e:d.e,x:d.x});
+    for(let i=1;i<=count;i++)CARDS.push({id:kind+"_"+i,n:d.n,cp:0,t:d.t,e:d.e,x:d.x,ore:true});
   };
   add("gold",9);
   add("diamond",6);
   add("ultimanium",1);
 })();
+
+// Forgemaster ALSO uses the shared global cards.
+const GLOBAL_CARDS=[
+  {id:"g_g1", n:"GET THAT OUTTA HERE!", cp:1,t:"blue",  e:"🚫⭐",x:"Remove a status effect token from a chosen player."},
+  {id:"g_g2", n:"TRANSFERENCE!",        cp:2,t:"blue",  e:"🔀🔮",x:"Transfer 1 status effect token from a chosen player to another chosen player."},
+  {id:"g_g3", n:"WHAT STATUS EFFECTS?", cp:2,t:"blue",  e:"⭐🧹",x:"Remove all status effect tokens from a chosen player."},
+  {id:"g_g4", n:"VEGAS BABY!",          cp:0,t:"blue",  e:"🎲💰",x:"Roll one die: Gain half the value as CP rounded up."},
+  {id:"g_g5", n:"BETTER D!",            cp:0,t:"orange",e:"🛡🎲", x:"A chosen player may perform an additional roll attempt of up to five dice during their defensive roll phase."},
+  {id:"g_g6", n:"NOT THIS TIME!",       cp:1,t:"orange",e:"🛡🚧", x:"A chosen player prevents 6 incoming damage."},
+  {id:"g_g7", n:"SO WILD!",             cp:2,t:"orange",e:"🃏⭐",x:"Change the value of any one die."},
+  {id:"g_g8", n:"SIX-IT!",              cp:1,t:"orange",e:"6️⃣🎲",x:"Change the value of one of your dice to a 6."},
+  {id:"g_g9", n:"ONE MORE TIME!",       cp:1,t:"orange",e:"🎲🔄",x:"A chosen player may perform an additional roll attempt of up to five dice during their offensive roll phase."},
+  {id:"g_g10",n:"TWICE AS WILD!",       cp:3,t:"orange",e:"🃏🃏",x:"Change the values of any two dice."},
+  {id:"g_g11",n:"TRY, TRY AGAIN!",      cp:1,t:"orange",e:"🔄🎲",x:"You or a chosen teammate may re-roll up to two dice."},
+  {id:"g_g12",n:"SAMESIES!",            cp:1,t:"orange",e:"🎲🎲",x:"Change the value of one of your dice to match another die from the same roll."},
+  {id:"g_g13",n:"HELPING HAND!",        cp:1,t:"orange",e:"🤝🎲",x:"Select one of your opponent's dice and force them to reroll it."},
+  {id:"g_g14",n:"GETTING PAID!",        cp:0,t:"red",   e:"💰💰",x:"Gain 2 CP."},
+  {id:"g_g15",n:"DOUBLE UP!",           cp:1,t:"red",   e:"🃏🃏",x:"Draw 2 cards."},
+  {id:"g_g16",n:"TRIPLE UP!",           cp:2,t:"red",   e:"🃏🃏🃏",x:"Draw 3 cards."},
+  {id:"g_g17",n:"TIP IT!",              cp:1,t:"red",   e:"🔼🎲",x:"Increase or decrease any die by 1. (Cannot decrease a 1 or increase a 6.)"},
+];
+GLOBAL_CARDS.forEach(c=>CARDS.push(c));
 
 // ─── TOKENS / ARMOR ──────────────────────────────────────────────────────────
 // Two rows of 3 armor pieces: helmets (top) then shields (bottom).
