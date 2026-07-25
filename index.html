@@ -22,7 +22,6 @@ button{font-family:inherit;cursor:pointer}
 #center-block{position:absolute;top:calc(46px + var(--hand-h));left:0;right:var(--panel-w);bottom:calc(var(--hand-h) + 6px);display:flex;flex-direction:column;overflow:hidden}
 #p2sec{flex:1;overflow:hidden;border-bottom:1px solid var(--bdr);min-height:0;position:relative;z-index:1}
 #p1sec{flex:1;overflow:hidden;border-top:1px solid var(--bdr);min-height:0;position:relative;z-index:1}
-#midsec{flex:0 0 auto;display:flex;flex-direction:column;border-bottom:1px solid var(--bdr);position:relative;z-index:1}
 #tz{height:0;overflow:visible;position:relative;flex-shrink:0}
 /* Resizer pill pinned just above p1 hand */
 #hand-resizer{position:absolute;bottom:var(--hand-h);left:0;right:var(--panel-w);height:6px;background:transparent;cursor:ns-resize;z-index:20}
@@ -31,7 +30,12 @@ button{font-family:inherit;cursor:pointer}
 #right-panel{position:fixed;top:0;right:0;width:var(--panel-w);height:100vh;background:#07101E;border-left:1px solid var(--bdr);z-index:15;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:8px 0;overflow:hidden;pointer-events:auto}
 /* Dice rows at top/bottom of play space */
 /* ── Dice Hand zones (top/bottom of play space) ── */
-.ps-hand-zone{width:100%;display:flex;align-items:center;gap:6px;padding:5px 10px;flex-shrink:0;border:1px solid var(--bdrhi);border-left:none;border-right:none;background:#07101E;position:relative}
+.ps-hand-zone{width:100%;display:flex;flex-direction:column;gap:5px;padding:7px 10px;flex-shrink:0;border:1px solid var(--bdrhi);border-left:none;border-right:none;background:#07101E;position:relative}
+.ps-tokens-row{display:flex;align-items:center;gap:10px;min-height:24px}
+.ps-stats-row{display:flex;align-items:center;gap:16px}
+.ps-dice-line{display:flex;align-items:center;gap:8px}
+.ps-dice-left{display:flex;flex-direction:column;align-items:flex-start;gap:3px;flex-shrink:0}
+.ps-dice-right{display:flex;align-items:center;gap:8px;flex-shrink:0;margin-left:auto}
 .ps-hand-lbl{font-size:7px;font-weight:700;letter-spacing:1.5px;color:var(--txtd);white-space:nowrap;flex-shrink:0}
 .ps-dicerow{display:flex;flex-wrap:wrap;gap:5px;align-items:center;flex:1;min-width:0}
 .ps-all-btn{font-size:8px;font-weight:700;padding:3px 8px;border-radius:4px;border:1.5px solid var(--bdrhi);background:transparent;color:var(--txtd);cursor:pointer;white-space:nowrap;flex-shrink:0;transition:color .1s,border-color .1s}
@@ -133,8 +137,6 @@ button{font-family:inherit;cursor:pointer}
 .char-btn:hover{border-color:var(--teal);color:var(--teal)}
 
 /* ── Dice strip ── */
-.dstrip{height:72px;display:flex;align-items:center;gap:6px;padding:0 10px;background:var(--surf);border-bottom:1px solid var(--bdr);flex-shrink:0;overflow-x:auto}
-#p1dstrip{border-bottom:none;border-top:1px solid var(--bdr)}
 .die{width:52px;height:52px;border-radius:7px;border:2px solid;display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative;flex-shrink:0;transition:opacity .1s;background:var(--panel)}
 .die.lk{opacity:.5;background:#070B14}
 .dico{pointer-events:none}
@@ -172,7 +174,6 @@ button{font-family:inherit;cursor:pointer}
 #p1hand.snap-over,#p2hand.snap-over{background:#0A1828;outline:1px solid var(--teal)}
 /* Flipped view — used when THIS browser is Player 2, so P2 always sits at the bottom */
 .flip #center-block{flex-direction:column-reverse}
-.flip #midsec{flex-direction:column-reverse}
 .flip #right-panel{flex-direction:column-reverse}
 .flip #p1hand{top:46px;bottom:auto;border-top:none;border-bottom:1px solid var(--bdr);align-items:flex-end}
 .flip #p2hand{bottom:0;top:auto;border-bottom:none;border-top:1px solid var(--bdr);align-items:flex-start}
@@ -248,60 +249,6 @@ button{font-family:inherit;cursor:pointer}
 <div id="center-block">
 <div id="p2sec"><div id="p2grid"></div></div>
 
-<div id="midsec">
-  <div class="dstrip" id="p2dstrip">
-    <span style="font-size:9px;font-weight:700;color:var(--teal);letter-spacing:1px;flex-shrink:0">P2</span>
-    <div class="sep"></div>
-    <div class="sg"><span class="slbl">HP</span><div class="svr">
-      <button class="sbtn" onclick="adjStat('p2','hp',-1)">&#8722;</button>
-      <span class="sval" id="p2hp" style="color:var(--hp)" onclick="editStat(this,'p2','hp')">50</span>
-      <button class="sbtn" onclick="adjStat('p2','hp',1)">+</button>
-    </div></div>
-    <div class="sg"><span class="slbl">CP</span><div class="svr">
-      <button class="sbtn" onclick="adjStat('p2','cp',-1)">&#8722;</button>
-      <span class="sval" id="p2cp" style="color:var(--gold)" onclick="editStat(this,'p2','cp')">2</span>
-      <button class="sbtn" onclick="adjStat('p2','cp',1)">+</button>
-    </div></div>
-    <div class="sep"></div>
-    <div id="p2tokens" style="display:flex;gap:6px;align-items:center;flex-shrink:0"></div>
-    <div id="p2hex-spacer" style="width:0px;flex-shrink:0;transition:width .2s"></div>
-    <div class="sep"></div>
-    <button class="btn" id="p2draw" onclick="drawCard('p2')">Draw</button>
-    <div class="disc-pile" id="p2disc-pile" onclick="viewDiscard('p2')" title="View discard pile">
-      <div class="disc-inner" id="p2disc-vis"><span class="disc-n" id="p2disc-n">0</span></div>
-      <span class="disc-lbl">DISCARD</span>
-    </div>
-    <span style="font-size:9px;color:#CDD8E4;font-weight:700" id="p2info">Hand:0</span>
-    <button class="btn" id="p2leaflet-btn" style="display:none;margin-left:4px" onclick="openLeaflet('p2')">Leaflet</button>
-  </div>
-  <div id="tz"></div>
-  <div class="dstrip" id="p1dstrip">
-    <span style="font-size:9px;font-weight:700;color:var(--teal);letter-spacing:1px;flex-shrink:0">P1</span>
-    <div class="sep"></div>
-    <div class="sg"><span class="slbl">HP</span><div class="svr">
-      <button class="sbtn" onclick="adjStat('p1','hp',-1)">&#8722;</button>
-      <span class="sval" id="p1hp" style="color:var(--hp)" onclick="editStat(this,'p1','hp')">50</span>
-      <button class="sbtn" onclick="adjStat('p1','hp',1)">+</button>
-    </div></div>
-    <div class="sg"><span class="slbl">CP</span><div class="svr">
-      <button class="sbtn" onclick="adjStat('p1','cp',-1)">&#8722;</button>
-      <span class="sval" id="p1cp" style="color:var(--gold)" onclick="editStat(this,'p1','cp')">2</span>
-      <button class="sbtn" onclick="adjStat('p1','cp',1)">+</button>
-    </div></div>
-    <div class="sep"></div>
-    <div id="p1tokens" style="display:flex;gap:6px;align-items:center;flex-shrink:0"></div>
-    <div id="p1hex-spacer" style="width:0px;flex-shrink:0;transition:width .2s"></div>
-    <div class="sep"></div>
-    <button class="btn" id="p1draw" onclick="drawCard('p1')">Draw</button>
-    <div class="disc-pile" id="p1disc-pile" onclick="viewDiscard('p1')" title="View discard pile">
-      <div class="disc-inner" id="p1disc-vis"><span class="disc-n" id="p1disc-n">0</span></div>
-      <span class="disc-lbl">DISCARD</span>
-    </div>
-    <span style="font-size:9px;color:#CDD8E4;font-weight:700" id="p1info">Hand:0</span>
-    <button class="btn" id="p1leaflet-btn" style="display:none;margin-left:4px" onclick="openLeaflet('p1')">Leaflet</button>
-  </div>
-</div>
-
 <div id="p1sec"><div id="p1grid"></div></div>
 </div><!-- /center-block -->
 
@@ -322,9 +269,37 @@ button{font-family:inherit;cursor:pointer}
 <div id="right-panel">
   <!-- P2 Dice Hand — top -->
   <div class="ps-hand-zone" id="p2hand-zone">
-    <span class="ps-hand-lbl">DICE HAND · P2</span>
-    <div class="ps-dicerow" id="p2dicerow-ps" data-player="p2"></div>
-    <button class="ps-all-btn" onclick="sendAllToTray('p2')" title="Send all dice to tray">ALL</button>
+    <div class="ps-tokens-row">
+      <div id="p2tokens" style="display:flex;gap:6px;align-items:center"></div>
+      <div id="p2hex-spacer" style="width:0px;flex-shrink:0;transition:width .2s"></div>
+    </div>
+    <div class="ps-stats-row">
+      <div class="sg"><span class="slbl">HP</span><div class="svr">
+        <button class="sbtn" onclick="adjStat('p2','hp',-1)">&#8722;</button>
+        <span class="sval" id="p2hp" style="color:var(--hp)" onclick="editStat(this,'p2','hp')">50</span>
+        <button class="sbtn" onclick="adjStat('p2','hp',1)">+</button>
+      </div></div>
+      <div class="sg"><span class="slbl">CP</span><div class="svr">
+        <button class="sbtn" onclick="adjStat('p2','cp',-1)">&#8722;</button>
+        <span class="sval" id="p2cp" style="color:var(--gold)" onclick="editStat(this,'p2','cp')">2</span>
+        <button class="sbtn" onclick="adjStat('p2','cp',1)">+</button>
+      </div></div>
+    </div>
+    <div class="ps-dice-line">
+      <div class="ps-dice-left">
+        <span class="ps-hand-lbl">DICE HAND · P2</span>
+        <button class="ps-all-btn" onclick="sendAllToTray('p2')" title="Send all dice to tray">ALL</button>
+      </div>
+      <div class="ps-dicerow" id="p2dicerow-ps" data-player="p2"></div>
+      <div class="ps-dice-right">
+        <button class="btn" id="p2draw" onclick="drawCard('p2')">Draw</button>
+        <div class="disc-pile" id="p2disc-pile" onclick="viewDiscard('p2')" title="View discard pile">
+          <div class="disc-inner" id="p2disc-vis"><span class="disc-n" id="p2disc-n">0</span></div>
+          <span class="disc-lbl">DISCARD</span>
+        </div>
+        <button class="btn" id="p2leaflet-btn" style="display:none" onclick="openLeaflet('p2')">Leaflet</button>
+      </div>
+    </div>
   </div>
 
   <!-- Center: shared tray + single set of controls -->
@@ -341,9 +316,37 @@ button{font-family:inherit;cursor:pointer}
 
   <!-- P1 Dice Hand — bottom -->
   <div class="ps-hand-zone" id="p1hand-zone">
-    <span class="ps-hand-lbl">DICE HAND · P1</span>
-    <div class="ps-dicerow" id="p1dicerow-ps" data-player="p1"></div>
-    <button class="ps-all-btn" onclick="sendAllToTray('p1')" title="Send all dice to tray">ALL</button>
+    <div class="ps-tokens-row">
+      <div id="p1tokens" style="display:flex;gap:6px;align-items:center"></div>
+      <div id="p1hex-spacer" style="width:0px;flex-shrink:0;transition:width .2s"></div>
+    </div>
+    <div class="ps-stats-row">
+      <div class="sg"><span class="slbl">HP</span><div class="svr">
+        <button class="sbtn" onclick="adjStat('p1','hp',-1)">&#8722;</button>
+        <span class="sval" id="p1hp" style="color:var(--hp)" onclick="editStat(this,'p1','hp')">50</span>
+        <button class="sbtn" onclick="adjStat('p1','hp',1)">+</button>
+      </div></div>
+      <div class="sg"><span class="slbl">CP</span><div class="svr">
+        <button class="sbtn" onclick="adjStat('p1','cp',-1)">&#8722;</button>
+        <span class="sval" id="p1cp" style="color:var(--gold)" onclick="editStat(this,'p1','cp')">2</span>
+        <button class="sbtn" onclick="adjStat('p1','cp',1)">+</button>
+      </div></div>
+    </div>
+    <div class="ps-dice-line">
+      <div class="ps-dice-left">
+        <span class="ps-hand-lbl">DICE HAND · P1</span>
+        <button class="ps-all-btn" onclick="sendAllToTray('p1')" title="Send all dice to tray">ALL</button>
+      </div>
+      <div class="ps-dicerow" id="p1dicerow-ps" data-player="p1"></div>
+      <div class="ps-dice-right">
+        <button class="btn" id="p1draw" onclick="drawCard('p1')">Draw</button>
+        <div class="disc-pile" id="p1disc-pile" onclick="viewDiscard('p1')" title="View discard pile">
+          <div class="disc-inner" id="p1disc-vis"><span class="disc-n" id="p1disc-n">0</span></div>
+          <span class="disc-lbl">DISCARD</span>
+        </div>
+        <button class="btn" id="p1leaflet-btn" style="display:none" onclick="openLeaflet('p1')">Leaflet</button>
+      </div>
+    </div>
   </div>
 </div>
 <!-- Vertical resizer — drag left to open panel, right to close -->
@@ -1344,7 +1347,7 @@ function editStat(el,p,stat){
   inp.addEventListener("blur",commit);inp.addEventListener("keydown",e=>{if(e.key==="Enter")inp.blur();});
 }
 // rollDice / resetDice / toggleLock removed — replaced by rollTray / resetTray / die drag
-function drawCard(p){if(NET.on&&p!==NET.me)return;const P=S[p];if(!P.deck.length||!S.chars[p])return;P.hand.push(P.deck.shift());updateDrawBtn(p);document.getElementById(p+"info").textContent="Hand:"+P.hand.length;renderHands();netSendCards(p);}
+function drawCard(p){if(NET.on&&p!==NET.me)return;const P=S[p];if(!P.deck.length||!S.chars[p])return;P.hand.push(P.deck.shift());updateDrawBtn(p);const inf=document.getElementById(p+"info");if(inf)inf.textContent="Hand:"+P.hand.length;renderHands();netSendCards(p);}
 // ─── DISCARD PANEL ────────────────────────────────────────────────────────────
 let discardPanelPlayer=null;
 
