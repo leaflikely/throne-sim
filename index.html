@@ -49,6 +49,16 @@ button{font-family:inherit;cursor:pointer}
 .ps-stats-inline{display:flex;align-items:center;gap:14px}
 .ps-all-btn{font-size:8px;font-weight:700;padding:3px 8px;border-radius:4px;border:1.5px solid var(--bdrhi);background:transparent;color:var(--txtd);cursor:pointer;white-space:nowrap;flex-shrink:0;transition:color .1s,border-color .1s}
 .ps-all-btn:hover{border-color:var(--teal);color:var(--teal)}
+/* Left-corner stack: discard pile + leaflet button, pinned to a corner of the
+   play-space hand zone. P1 stacks up from the bottom-left; P2 stacks down
+   from the top-left (mirrored), so leaflet sits just above P1's HP/CP row
+   and just below P2's. */
+.ps-corner-stack{position:absolute;left:8px;display:flex;flex-direction:column;align-items:center;gap:5px;z-index:2}
+#p1hand-zone .ps-corner-stack{bottom:6px;flex-direction:column-reverse}
+#p2hand-zone .ps-corner-stack{top:6px}
+.ps-disc-pile{display:flex;flex-direction:column;align-items:center;gap:1px;cursor:pointer}
+/* Nudge HP/CP counters right so the HP minus button clears the dice */
+.ps-stats-inline{margin-left:6px}
 /* Center area: tray + controls */
 .ps-center{display:flex;flex-direction:row;gap:12px;align-items:center;justify-content:center;flex:1;min-height:0;width:100%;overflow:hidden;padding:8px}
 /* Shared dice tray */
@@ -272,10 +282,6 @@ button{font-family:inherit;cursor:pointer}
   <div id="p2handcards" style="display:flex;gap:8px;align-items:flex-start"></div>
   <div class="hand-disc-col">
     <button class="btn hand-draw" id="p2draw" onclick="drawCard('p2')">Draw</button>
-    <div class="disc-pile" id="p2disc-pile" onclick="viewDiscard('p2')" title="View discard pile">
-      <div class="disc-inner" id="p2disc-vis"><span class="disc-n" id="p2disc-n">0</span></div>
-      <span class="disc-lbl">DISCARD</span>
-    </div>
   </div>
 </div>
 
@@ -298,10 +304,6 @@ button{font-family:inherit;cursor:pointer}
   <div id="p1handcards" style="display:flex;gap:8px;align-items:flex-end"></div>
   <div class="hand-disc-col">
     <button class="btn hand-draw" id="p1draw" onclick="drawCard('p1')">Draw</button>
-    <div class="disc-pile" id="p1disc-pile" onclick="viewDiscard('p1')" title="View discard pile">
-      <div class="disc-inner" id="p1disc-vis"><span class="disc-n" id="p1disc-n">0</span></div>
-      <span class="disc-lbl">DISCARD</span>
-    </div>
   </div>
 </div>
 </div>
@@ -310,6 +312,13 @@ button{font-family:inherit;cursor:pointer}
 <div id="right-panel">
   <!-- P2 Dice Hand — top -->
   <div class="ps-hand-zone" id="p2hand-zone">
+    <div class="ps-corner-stack">
+      <button class="btn ps-leaflet-btn" id="p2leaflet-btn" style="display:none" onclick="openLeaflet('p2')">Leaflet</button>
+      <div class="disc-pile ps-disc-pile" id="p2disc-pile" onclick="viewDiscard('p2')" title="View discard pile">
+        <div class="disc-inner" id="p2disc-vis"><span class="disc-n" id="p2disc-n">0</span></div>
+        <span class="disc-lbl">DISCARD</span>
+      </div>
+    </div>
     <div class="ps-tokens-row">
       <div id="p2tokens" style="display:flex;gap:6px;align-items:center"></div>
       <div id="p2hex-spacer" style="width:0px;flex-shrink:0;transition:width .2s"></div>
@@ -334,7 +343,6 @@ button{font-family:inherit;cursor:pointer}
             <button class="sbtn" onclick="adjStat('p2','cp',1)">+</button>
           </div></div>
         </div>
-        <button class="btn" id="p2leaflet-btn" style="display:none" onclick="openLeaflet('p2')">Leaflet</button>
       </div>
     </div>
   </div>
@@ -353,6 +361,13 @@ button{font-family:inherit;cursor:pointer}
 
   <!-- P1 Dice Hand — bottom -->
   <div class="ps-hand-zone" id="p1hand-zone">
+    <div class="ps-corner-stack">
+      <div class="disc-pile ps-disc-pile" id="p1disc-pile" onclick="viewDiscard('p1')" title="View discard pile">
+        <div class="disc-inner" id="p1disc-vis"><span class="disc-n" id="p1disc-n">0</span></div>
+        <span class="disc-lbl">DISCARD</span>
+      </div>
+      <button class="btn ps-leaflet-btn" id="p1leaflet-btn" style="display:none" onclick="openLeaflet('p1')">Leaflet</button>
+    </div>
     <div class="ps-tokens-row">
       <div id="p1tokens" style="display:flex;gap:6px;align-items:center"></div>
       <div id="p1hex-spacer" style="width:0px;flex-shrink:0;transition:width .2s"></div>
@@ -377,7 +392,6 @@ button{font-family:inherit;cursor:pointer}
             <button class="sbtn" onclick="adjStat('p1','cp',1)">+</button>
           </div></div>
         </div>
-        <button class="btn" id="p1leaflet-btn" style="display:none" onclick="openLeaflet('p1')">Leaflet</button>
       </div>
     </div>
   </div>
@@ -873,7 +887,7 @@ function buildAbilCard(a,ab,upgraded,char,col,row,rowSpan){
   const badge=isDef
     ?`<span class="abadge" style="background:#1E683022;color:#1E6830;margin-left:5px">DEF${defN}</span>`
     :isUlt
-    ?`<span class="abadge" style="background:#90680822;color:#906808;margin-left:5px">ULT${ultN}</span>`
+    ?`<span class="abadge" style="background:#90680822;color:#906808;margin-left:5px">ULT</span>`
     :ab.passive
     ?`<span class="abadge" style="background:#4A5A7022;color:#6A7A9A;margin-left:5px">PASSIVE</span>`
     :"";
@@ -1021,7 +1035,7 @@ function autoSizeAbilCards(){
       // Card vertical padding (~14px) + gaps between children
       fixedH+=14+(card.children.length-1)*4;
 
-      const fxTarget=Math.max(12,cardH-fixedH-3); // small buffer prevents last-line clipping
+      const fxTarget=Math.max(12,cardH-fixedH-6); // buffer prevents last-line clipping (bold keyword spans need extra room)
 
       // Binary search: use scrollHeight so overflow:hidden doesn't hide overflowing content
       let lo=8,hi=22;
@@ -1033,11 +1047,21 @@ function autoSizeAbilCards(){
         });
         if(fx.scrollHeight<=fxTarget)lo=mid+1; else hi=mid-1;
       }
-      const final=Math.max(8,lo-1);
+      let final=Math.max(8,lo-1);
       fx.style.fontSize=final+"px";
       fx.querySelectorAll("svg").forEach(s=>{
         const sz=Math.max(8,final-1);s.setAttribute("width",sz);s.setAttribute("height",sz);
       });
+      // Safety pass: bold keyword spans (e.g. "Activate Nevermore") can push
+      // actual rendered height a hair past the binary-search estimate.
+      // Re-check at final paint size and step down until it truly fits.
+      while(fx.scrollHeight>fxTarget&&final>8){
+        final-=1;
+        fx.style.fontSize=final+"px";
+        fx.querySelectorAll("svg").forEach(s=>{
+          const sz=Math.max(8,final-1);s.setAttribute("width",sz);s.setAttribute("height",sz);
+        });
+      }
     });
   }));
 }
