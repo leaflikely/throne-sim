@@ -104,7 +104,7 @@ button{font-family:inherit;cursor:pointer}
 .layout-save-btn:hover{background:#28A05030}
 .layout-reset-btn{font-size:8px;font-weight:700;padding:3px 8px;border-radius:4px;border:1.5px solid #C06030;background:transparent;color:#C06030;cursor:pointer;white-space:nowrap;letter-spacing:.5px}
 .layout-reset-btn:hover{background:#C0603020}
-#layout-toolbar{display:flex;gap:6px;align-items:center;justify-content:center;flex-wrap:wrap}
+#layout-toolbar{display:flex;gap:6px;align-items:center;justify-content:center;flex-wrap:wrap;max-width:200px}
 /* Die in play space */
 .ps-die{width:52px;height:52px;border-radius:7px;border:2px solid;display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative;flex-shrink:0;background:var(--panel);user-select:none}
 .ps-die.in-tray{position:absolute;cursor:pointer}
@@ -865,6 +865,28 @@ window.addEventListener("mousemove",e=>{
   if(layoutDrag.active){moveLayoutObj(e);return;}
   if(layoutResize.active){resizeLayoutObj(e);return;}
 },{passive:true});
+
+window.addEventListener("mouseup",e=>{
+  if(ovDrag.active){
+    const tk=OV_TOKENS[ovDrag.id];
+    if(tk){
+      tk.el.classList.remove("dg");
+      // Send position as a fraction of the window so it lands sensibly on
+      // a differently-sized screen
+      netSend({t:"ov",id:ovDrag.id,rx:tk.x/window.innerWidth,ry:tk.y/window.innerHeight});
+    }
+    ovDrag.active=false;ovDrag.id=null;return;
+  }
+  if(cardDrag.active){
+    const id=cardDrag.id;
+    cardDrag.active=false;cardDrag.id=null;
+    commitCardDrop(id);
+    setTimeout(()=>{lastCardMoved=false;},80);
+    return;
+  }
+  if(layoutDrag.active){layoutDrag.active=false;layoutDrag.el=null;return;}
+  if(layoutResize.active){layoutResize.active=false;layoutResize.el=null;return;}
+});
 
 // ─── LAYOUT EDITOR: drag/resize P1's play-space objects, mirror onto P2 ─────
 // Objects: stats (HP+CP together), leaflet, discard, all (the ALL button),
