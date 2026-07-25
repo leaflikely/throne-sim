@@ -12,6 +12,10 @@ const I={
   hammer:(c,s)=>`<svg class="dico" width="${s}" height="${s}" viewBox="0 0 24 24" fill="none"><rect x="4" y="3.5" width="16" height="7" rx="1.5" fill="${c}" fill-opacity="0.25" stroke="${c}" stroke-width="1.8"/><line x1="12" y1="10.5" x2="12" y2="22" stroke="${c}" stroke-width="2.4" stroke-linecap="round"/></svg>`,
   // Anvil: classic horned silhouette on a base
   anvil:(c,s)=>`<svg class="dico" width="${s}" height="${s}" viewBox="0 0 24 24" fill="none"><path d="M2.5 6 Q3 9.5 8 10 L9 13 L7 15 L6 18 L18 18 L17 15 L15 13 L16 10 Q20.5 9.5 21.5 7.5 L21.5 6 Z" fill="${c}" fill-opacity="0.22" stroke="${c}" stroke-width="1.6" stroke-linejoin="round"/><rect x="7.5" y="19.5" width="9" height="2.5" rx="0.8" fill="${c}" fill-opacity="0.4" stroke="${c}" stroke-width="1.2"/></svg>`,
+  // Helmet: rounded dome with a brow guard
+  helmet:(c,fill,s)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none"><path d="M4 15 Q4 5 12 4 Q20 5 20 15 L20 17 L4 17 Z" fill="${fill}" stroke="${c}" stroke-width="1.8" stroke-linejoin="round"/><line x1="4" y1="13" x2="20" y2="13" stroke="${c}" stroke-width="1.4"/><rect x="9.5" y="4" width="5" height="9" rx="1" fill="${c}" fill-opacity="0.35" stroke="${c}" stroke-width="1.2"/></svg>`,
+  // Shield: heater-style crest
+  shield:(c,fill,s)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none"><path d="M12 3 L20 6 L20 12 Q20 18 12 21 Q4 18 4 12 L4 6 Z" fill="${fill}" stroke="${c}" stroke-width="1.8" stroke-linejoin="round"/><path d="M12 3 L12 21" stroke="${c}" stroke-width="1" opacity="0.4"/></svg>`,
 };
 
 // ─── DIE FACES ───────────────────────────────────────────────────────────────
@@ -63,35 +67,88 @@ const ABIL2={};
 const CARD_UPGRADES={};
 
 // ─── CARDS ───────────────────────────────────────────────────────────────────
-// Global deck only for now — Forgemaster's unique cards come later.
-const CARDS=[
-  {id:"g_g1", n:"GET THAT OUTTA HERE!", cp:1,t:"blue",  e:"🚫⭐",x:"Remove a status effect token from a chosen player."},
-  {id:"g_g2", n:"TRANSFERENCE!",        cp:2,t:"blue",  e:"🔀🔮",x:"Transfer 1 status effect token from a chosen player to another chosen player."},
-  {id:"g_g3", n:"WHAT STATUS EFFECTS?", cp:2,t:"blue",  e:"⭐🧹",x:"Remove all status effect tokens from a chosen player."},
-  {id:"g_g4", n:"VEGAS BABY!",          cp:0,t:"blue",  e:"🎲💰",x:"Roll one die: Gain half the value as CP rounded up."},
-  {id:"g_g5", n:"BETTER D!",            cp:0,t:"orange",e:"🛡🎲", x:"A chosen player may perform an additional roll attempt of up to five dice during their defensive roll phase."},
-  {id:"g_g6", n:"NOT THIS TIME!",       cp:1,t:"orange",e:"🛡🚧", x:"A chosen player prevents 6 incoming damage."},
-  {id:"g_g7", n:"SO WILD!",             cp:2,t:"orange",e:"🃏⭐",x:"Change the value of any one die."},
-  {id:"g_g8", n:"SIX-IT!",              cp:1,t:"orange",e:"6️⃣🎲",x:"Change the value of one of your dice to a 6."},
-  {id:"g_g9", n:"ONE MORE TIME!",       cp:1,t:"orange",e:"🎲🔄",x:"A chosen player may perform an additional roll attempt of up to five dice during their offensive roll phase."},
-  {id:"g_g10",n:"TWICE AS WILD!",       cp:3,t:"orange",e:"🃏🃏",x:"Change the values of any two dice."},
-  {id:"g_g11",n:"TRY, TRY AGAIN!",      cp:1,t:"orange",e:"🔄🎲",x:"You or a chosen teammate may re-roll up to two dice."},
-  {id:"g_g12",n:"SAMESIES!",            cp:1,t:"orange",e:"🎲🎲",x:"Change the value of one of your dice to match another die from the same roll."},
-  {id:"g_g13",n:"HELPING HAND!",        cp:1,t:"orange",e:"🤝🎲",x:"Select one of your opponent's dice and force them to reroll it."},
-  {id:"g_g14",n:"GETTING PAID!",        cp:0,t:"red",   e:"💰💰",x:"Gain 2 CP."},
-  {id:"g_g15",n:"DOUBLE UP!",           cp:1,t:"red",   e:"🃏🃏",x:"Draw 2 cards."},
-  {id:"g_g16",n:"TRIPLE UP!",           cp:2,t:"red",   e:"🃏🃏🃏",x:"Draw 3 cards."},
-  {id:"g_g17",n:"TIP IT!",              cp:1,t:"red",   e:"🔼🎲",x:"Increase or decrease any die by 1. (Cannot decrease a 1 or increase a 6.)"},
-];
+// Forgemaster has NO spells or upgrades — only ORE cards used to power his
+// abilities (see leaflet). All ore has no CP cost. Deck composition:
+// 9 Gold, 6 Diamond, 1 Ultimanium.
+const ORE_DEFS={
+  gold:{n:"GOLD ORE",       t:"blue",e:"🟡",
+    x:"Scrap Effect:<br>Heal 1 or gain 1 CP.<br>Discard this card."},
+  diamond:{n:"DIAMOND ORE", t:"blue",e:"💎",
+    x:"Scrap Effect:<br>You may reroll 1 die or gain 1 CP.<br>Discard this card."},
+  ultimanium:{n:"ULTIMANIUM ORE",t:"blue",e:"🔷",
+    x:"Scrap Effect:<br>Change the value of one of your dice to 6 or draw 2.<br>Discard this card."},
+};
+const CARDS=[];
+(function(){
+  const add=(kind,count)=>{
+    const d=ORE_DEFS[kind];
+    for(let i=1;i<=count;i++)CARDS.push({id:kind+"_"+i,n:d.n,cp:0,t:d.t,e:d.e,x:d.x});
+  };
+  add("gold",9);
+  add("diamond",6);
+  add("ultimanium",1);
+})();
 
-// ─── TOKENS ──────────────────────────────────────────────────────────────────
-// Armor / Ore tokens come in the next pass — empty strip for now.
+// ─── TOKENS / ARMOR ──────────────────────────────────────────────────────────
+// Two rows of 3 armor pieces: helmets (top) then shields (bottom).
+// Colors left→right: gold, diamond, purple. Each row holds at most one
+// active piece. Clicking a piece selects it; clicking the active one clears it.
+const ARMOR_COLORS={
+  gold:   {stroke:"#D8A828",fill:"#D8A82833"},
+  diamond:{stroke:"#50C8D8",fill:"#50C8D833"},
+  purple: {stroke:"#9050D8",fill:"#9050D833"},
+};
+const ARMOR_ORDER=["gold","diamond","purple"];
+
 function renderTokens(player, playerState, container) {
   container.innerHTML = "";
+
+  const wrap = document.createElement("div");
+  wrap.style.cssText = "display:flex;flex-direction:column;gap:4px";
+
+  // Build one selectable row for a given armor slot ("helmet" or "shield")
+  const buildRow = (slot, iconFn, label) => {
+    const row = document.createElement("div");
+    row.style.cssText = "display:flex;align-items:center;gap:6px";
+
+    const lbl = document.createElement("span");
+    lbl.textContent = label;
+    lbl.style.cssText = "font-size:6px;font-weight:700;letter-spacing:1px;color:var(--txtd);width:34px;flex-shrink:0";
+    row.appendChild(lbl);
+
+    ARMOR_ORDER.forEach(color => {
+      const active = playerState[slot] === color;
+      const c = ARMOR_COLORS[color];
+      const btn = document.createElement("button");
+      btn.title = active ? "Deselect " + color : color + " " + slot;
+      btn.style.cssText =
+        "background:none;border:none;padding:2px;cursor:pointer;line-height:0;border-radius:5px;" +
+        "opacity:" + (active ? "1" : "0.30") + ";" +
+        (active ? "filter:drop-shadow(0 0 5px " + c.stroke + "AA);" : "") +
+        "transition:opacity .1s,filter .1s";
+      // When active, fill the shape with its colour; when idle, hollow outline
+      btn.innerHTML = iconFn(c.stroke, active ? c.fill : "transparent", 26);
+      btn.addEventListener("click", () => {
+        if (window.netCanEdit && !window.netCanEdit(player)) return;
+        // toggle: same colour clears the slot, otherwise switch to it
+        playerState[slot] = (playerState[slot] === color) ? null : color;
+        renderTokens(player, playerState, container);
+        if (window.netTokens) window.netTokens(player);
+      });
+      btn.addEventListener("mouseenter", () => { if (!active) btn.style.opacity = "0.6"; });
+      btn.addEventListener("mouseleave", () => { if (!active) btn.style.opacity = "0.30"; });
+      row.appendChild(btn);
+    });
+    return row;
+  };
+
+  wrap.appendChild(buildRow("helmet", I.helmet, "HELM"));
+  wrap.appendChild(buildRow("shield", I.shield, "SHIELD"));
+  container.appendChild(wrap);
 }
 
 function initTokenState() {
-  return {};
+  return { helmet: null, shield: null };
 }
 
 function dieIcon(faceValue, locked, size) {
