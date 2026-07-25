@@ -416,6 +416,7 @@ button{font-family:inherit;cursor:pointer}
       <div id="layout-toolbar">
         <button class="layout-edit-btn" id="layout-edit-btn" onclick="toggleLayoutEdit()" title="Drag or resize the HP/CP, Leaflet, Discard, ALL button, and dice row for P1">Edit Layout</button>
         <button class="layout-save-btn" id="layout-save-btn" style="display:none" onclick="saveLayout()" title="Save P1's positions and mirror them onto P2">Save Layout</button>
+        <button class="layout-save-btn" id="layout-copy-btn" style="display:none" onclick="copyLayoutValues()" title="Copy the current position/size values as text, to paste in and reuse later">Copy Values</button>
         <button class="layout-reset-btn" id="layout-reset-btn" style="display:none" onclick="resetLayout()" title="Clear saved layout and return to default positions">Reset Layout</button>
       </div>
     </div>
@@ -893,15 +894,31 @@ function primeAbsolute(el){
   el.dataset.primed="1";
 }
 
-function toggleLayoutEdit(){
+function toggleLayoutEdit(skipRevert){
+  const wasEditing=layoutEditing;
   layoutEditing=!layoutEditing;
   const btn=document.getElementById("layout-edit-btn");
   const saveBtn=document.getElementById("layout-save-btn");
+  const copyBtn=document.getElementById("layout-copy-btn");
   const resetBtn=document.getElementById("layout-reset-btn");
   btn.classList.toggle("active",layoutEditing);
   btn.textContent=layoutEditing?"Editing…":"Edit Layout";
   saveBtn.style.display=layoutEditing?"":"none";
+  copyBtn.style.display=layoutEditing?"":"none";
   resetBtn.style.display=layoutEditing?"":"none";
+  ["p1hand-zone","p2hand-zone"].forEach(zid=>{
+    const zone=document.getElementById(zid);if(!zone)return;
+    if(layoutEditing){
+      // Lock the zone's current on-screen height BEFORE any child becomes
+      // position:absolute — otherwise the zone (which is only as tall as its
+      // in-flow flex children) collapses the instant those children are
+      // pulled out of flow, and the whole play space jumps around.
+      if(!zone.dataset.lockedH){
+        zone.dataset.lockedH=zone.getBoundingClientRect().height+"px";
+        zone.style.height=zone.dataset.lockedH;
+      }
+    }
+  });
   LAYOUT_OBJS.forEach(obj=>{
     const el=layoutObjEl("p1",obj);
     if(!el)return;
@@ -912,6 +929,25 @@ function toggleLayoutEdit(){
       el.classList.remove("editing");
     }
   });
+  // Cancelling out of edit mode (button pressed again, not Save) discards
+  // any unsaved drag/resize changes — revert to the last saved layout, or
+  // back to default flow positions if nothing was ever saved.
+  if(wasEditing&&!layoutEditing&&!skipRevert){
+    let raw=null;try{raw=localStorage.getItem(LAYOUT_KEY);}catch(err){}
+    if(raw){
+      let data=null;try{data=JSON.parse(raw);}catch(err){}
+      if(data)applyLayout(data);
+    }else{
+      LAYOUT_OBJS.forEach(obj=>{
+        const el=layoutObjEl("p1",obj);if(!el)return;
+        el.style.position="";el.style.left="";el.style.top="";
+        el.style.width="";el.style.height="";
+        delete el.dataset.primed;delete el.dataset.scale;
+        const inner=el.firstElementChild;
+        if(inner)inner.style.transform="";
+      });
+    }
+  }
 }
 
 function startLayoutDrag(e,el){
@@ -967,9 +1003,9 @@ document.addEventListener("mousedown",e=>{
   if(el&&el.dataset.player==="p1"&&el.classList.contains("editing"))startLayoutDrag(e,el);
 });
 
-// Save P1's current positions/sizes (as fractions of its hand-zone), apply
-// them permanently, mirror the result onto P2, and persist to localStorage.
-function saveLayout(){
+// Read P1's current positions/sizes as fractions of its hand-zone (shared by
+// Save Layout and Copy Values so both report exactly the same numbers).
+function computeLayoutData(){
   const data={};
   LAYOUT_OBJS.forEach(obj=>{
     const el=layoutObjEl("p1",obj);if(!el)return;
@@ -982,9 +1018,45 @@ function saveLayout(){
       scale:parseFloat(el.dataset.scale)||1,
     };
   });
+  return data;
+}
+
+// Save P1's current positions/sizes (as fractions of its hand-zone), apply
+// them permanently, mirror the result onto P2, and persist to localStorage.
+function saveLayout(){
+  const data=computeLayoutData();
   try{localStorage.setItem(LAYOUT_KEY,JSON.stringify(data));}catch(err){}
   applyLayout(data);
-  if(layoutEditing)toggleLayoutEdit();
+  if(layoutEditing)toggleLayoutEdit(true);
+}
+
+// Copy the current position/size values as readable JSON text, so they can
+// be pasted elsewhere (e.g. back to the developer) and baked in as the new
+// default layout in a future version — separate from Save Layout, which
+// only persists to this browser's localStorage.
+function copyLayoutValues(){
+  const data=computeLayoutData();
+  const rounded={};
+  Object.keys(data).forEach(k=>{
+    const d=data[k];
+    rounded[k]={
+      xf:Math.round(d.xf*1000)/1000, yf:Math.round(d.yf*1000)/1000,
+      wf:Math.round(d.wf*1000)/1000, hf:Math.round(d.hf*1000)/1000,
+      scale:Math.round(d.scale*1000)/1000,
+    };
+  });
+  const text=JSON.stringify(rounded,null,2);
+  const btn=document.getElementById("layout-copy-btn");
+  const done=()=>{
+    if(!btn)return;
+    const old=btn.textContent;btn.textContent="✓ Copied";
+    setTimeout(()=>{btn.textContent=old;},1800);
+  };
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(done).catch(()=>window.prompt("Copy these layout values:",text));
+  }else{
+    window.prompt("Copy these layout values:",text);
+  }
 }
 
 // Apply saved fractional positions to BOTH players. P2 mirrors P1 vertically
@@ -996,6 +1068,11 @@ function saveLayout(){
 function applyLayout(data){
   if(!data)return;
   ["p1","p2"].forEach(player=>{
+    const zone=document.getElementById(player+"hand-zone");
+    if(zone&&!zone.dataset.lockedH){
+      zone.dataset.lockedH=zone.getBoundingClientRect().height+"px";
+      zone.style.height=zone.dataset.lockedH;
+    }
     LAYOUT_OBJS.forEach(obj=>{
       const el=layoutObjEl(player,obj);if(!el)return;
       const d=data[obj];if(!d)return;
@@ -1022,6 +1099,8 @@ function applyLayout(data){
 function resetLayout(){
   try{localStorage.removeItem(LAYOUT_KEY);}catch(err){}
   ["p1","p2"].forEach(player=>{
+    const zone=document.getElementById(player+"hand-zone");
+    if(zone){zone.style.height="";delete zone.dataset.lockedH;}
     LAYOUT_OBJS.forEach(obj=>{
       const el=layoutObjEl(player,obj);if(!el)return;
       el.style.position="";el.style.left="";el.style.top="";
@@ -1031,7 +1110,7 @@ function resetLayout(){
       if(inner)inner.style.transform="";
     });
   });
-  if(layoutEditing)toggleLayoutEdit();
+  if(layoutEditing)toggleLayoutEdit(true);
 }
 
 function loadSavedLayout(){
