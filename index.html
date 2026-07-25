@@ -174,7 +174,11 @@ button{font-family:inherit;cursor:pointer}
 
 /* ── Hand strips ── */
 :root{--hand-h:136px}
-#p1hand,#p2hand{position:absolute;left:0;right:var(--panel-w);height:var(--hand-h);overflow-x:auto;overflow-y:visible;display:flex;align-items:flex-start;gap:8px;padding:5px 12px;border-top:1px solid var(--bdr);background:#08101C;z-index:10}
+#p1hand,#p2hand{position:absolute;left:0;right:var(--panel-w);height:var(--hand-h);overflow-x:auto;overflow-y:visible;display:flex;align-items:flex-start;gap:8px;padding:5px 12px 5px 6px;border-top:1px solid var(--bdr);background:#08101C;z-index:10}
+/* Label at the far left is hidden so cards slide fully left */
+#p1handlbl,#p2handlbl{display:none}
+/* Discard pile pinned to the right edge of the hand strip */
+.hand-disc{position:sticky;right:0;margin-left:auto;flex-shrink:0;align-self:center;background:#08101C;padding-left:8px;z-index:2}
 #p1hand{bottom:0;border-top:1px solid var(--bdr)}
 #p2hand{top:46px;border-top:none;border-bottom:1px solid var(--bdr);align-items:flex-end}
 #p1hand.snap-over,#p2hand.snap-over{background:#0A1828;outline:1px solid var(--teal)}
@@ -255,6 +259,10 @@ button{font-family:inherit;cursor:pointer}
 <div id="p2hand">
   <span id="p2handlbl" style="font-size:8px;color:var(--txtd);font-weight:700;white-space:nowrap;margin-top:4px;flex-shrink:0">HAND (P2)</span>
   <div id="p2handcards" style="display:flex;gap:8px;align-items:flex-start"></div>
+  <div class="hand-disc disc-pile" id="p2disc-pile" onclick="viewDiscard('p2')" title="View discard pile">
+    <div class="disc-inner" id="p2disc-vis"><span class="disc-n" id="p2disc-n">0</span></div>
+    <span class="disc-lbl">DISCARD</span>
+  </div>
 </div>
 
 <!-- Center block: p2 grid + dice strips + p1 grid. Fixed in the middle, never pushed by hand resize. -->
@@ -274,6 +282,10 @@ button{font-family:inherit;cursor:pointer}
 <div id="p1hand">
   <span id="p1handlbl" style="font-size:8px;color:var(--txtd);font-weight:700;white-space:nowrap;margin-top:4px;flex-shrink:0">HAND (P1)</span>
   <div id="p1handcards" style="display:flex;gap:8px;align-items:flex-end"></div>
+  <div class="hand-disc disc-pile" id="p1disc-pile" onclick="viewDiscard('p1')" title="View discard pile">
+    <div class="disc-inner" id="p1disc-vis"><span class="disc-n" id="p1disc-n">0</span></div>
+    <span class="disc-lbl">DISCARD</span>
+  </div>
 </div>
 </div>
 
@@ -304,10 +316,6 @@ button{font-family:inherit;cursor:pointer}
       </div>
       <div class="ps-dice-right">
         <button class="btn" id="p2draw" onclick="drawCard('p2')">Draw</button>
-        <div class="disc-pile" id="p2disc-pile" onclick="viewDiscard('p2')" title="View discard pile">
-          <div class="disc-inner" id="p2disc-vis"><span class="disc-n" id="p2disc-n">0</span></div>
-          <span class="disc-lbl">DISCARD</span>
-        </div>
         <button class="btn" id="p2leaflet-btn" style="display:none" onclick="openLeaflet('p2')">Leaflet</button>
       </div>
     </div>
@@ -350,10 +358,6 @@ button{font-family:inherit;cursor:pointer}
       </div>
       <div class="ps-dice-right">
         <button class="btn" id="p1draw" onclick="drawCard('p1')">Draw</button>
-        <div class="disc-pile" id="p1disc-pile" onclick="viewDiscard('p1')" title="View discard pile">
-          <div class="disc-inner" id="p1disc-vis"><span class="disc-n" id="p1disc-n">0</span></div>
-          <span class="disc-lbl">DISCARD</span>
-        </div>
         <button class="btn" id="p1leaflet-btn" style="display:none" onclick="openLeaflet('p1')">Leaflet</button>
       </div>
     </div>
