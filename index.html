@@ -775,10 +775,13 @@ function renderFxHTML(fx,char){
 }
 function buildAbilCard(a,ab,upgraded,char,col,row,rowSpan){
   const isUlt=ab.t==="ult",isDef=ab.t==="def";
+  // def/ult badges carry a dice-count number (defDice / ultDice on the ability)
+  const defN=(ab.defDice!=null?ab.defDice:"");
+  const ultN=(ab.ultDice!=null?ab.ultDice:"");
   const badge=isDef
-    ?`<span class="abadge" style="background:#1E683022;color:#1E6830;margin-left:5px">DEF</span>`
+    ?`<span class="abadge" style="background:#1E683022;color:#1E6830;margin-left:5px">DEF${defN}</span>`
     :isUlt
-    ?`<span class="abadge" style="background:#90680822;color:#906808;margin-left:5px">ULTIMATE</span>`
+    ?`<span class="abadge" style="background:#90680822;color:#906808;margin-left:5px">ULT${ultN}</span>`
     :ab.passive
     ?`<span class="abadge" style="background:#4A5A7022;color:#6A7A9A;margin-left:5px">PASSIVE</span>`
     :"";
@@ -789,8 +792,10 @@ function buildAbilCard(a,ab,upgraded,char,col,row,rowSpan){
   const pullBtn=upgraded
     ?`<button class="pull-btn" title="Pull card back" onclick="event.stopPropagation();pullUpgradeCard('${char._player}','${a.id}')">↩</button>`
     :"";
+  // Keep the name + badge on ONE line (no wrap) so the badge stays to the right;
+  // the name font auto-shrinks later if it risks touching the card edges.
   return`<div class="${cls}" style="border-top-color:${ab.c};${placement}" data-abilid="${a.id}" data-player="${char._player}">
-    <div style="display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:3px;flex-shrink:0">
+    <div class="an-row" style="display:flex;align-items:center;justify-content:center;gap:3px;flex-shrink:0;flex-wrap:nowrap;max-width:100%">
       <span class="an" style="color:${ab.c}">${ab.n}</span>${badge}${pullBtn}
     </div>
     ${reqHTML?`<div class="areq">${reqHTML}</div>`:""}
@@ -826,16 +831,31 @@ function buildGrid(containerId,player){
   let html="";
   let offCol=0;
 
+  // If the ultimate declares pairWith:"<offAbilityId>", it shares that
+  // ability's column (ability on top, ult on the bottom half) instead of
+  // sitting under the defense. The defense then takes both rows of col 8.
+  const ultAb=char.abilities.find(a=>a.t==="ult");
+  const ultResolved=ultAb?(upgrades[ultAb.id]||ultAb):null;
+  const pairId=ultResolved&&ultResolved.pairWith?ultResolved.pairWith:null;
+  // Precompute which column each offensive ability lands in
+  const offOrder=char.abilities.filter(a=>{const r=upgrades[a.id]||a;return r.t!=="def"&&r.t!=="ult";});
+  const colOf={};offOrder.forEach((a,i)=>{colOf[a.id]=i+1;});
+
   char.abilities.forEach(a=>{
     const ab=upgrades[a.id]||a;
     const upgraded=!!upgrades[a.id];
 
     if(ab.t==="def"){
-      html+=buildAbilCard(a,ab,upgraded,char,8,1,1);
+      // paired ult frees up col 8 row 2, so def spans both rows
+      html+=buildAbilCard(a,ab,upgraded,char,8,1,pairId?2:1);
       return;
     }
     if(ab.t==="ult"){
-      html+=buildAbilCard(a,ab,upgraded,char,8,2,1);
+      if(pairId&&colOf[pairId]){
+        html+=buildAbilCard(a,ab,upgraded,char,colOf[pairId],2,1);
+      }else{
+        html+=buildAbilCard(a,ab,upgraded,char,8,2,1);
+      }
       return;
     }
 
@@ -843,8 +863,9 @@ function buildGrid(containerId,player){
     offCol++;
     const col=offCol;
     const hasSub=!!(ab.sub);
-    // Main card spans row 1 only (sub gets row 2); if no sub, span both rows
-    const rowSpan=hasSub?1:2;
+    // Paired ult occupies row 2 of this column → main card must be row 1 only
+    const takesRow2=hasSub||(pairId===a.id);
+    const rowSpan=takesRow2?1:2;
     html+=buildAbilCard(a,ab,upgraded,char,col,1,rowSpan);
     if(hasSub){
       html+=buildSubCard(ab.sub,char,col);
@@ -863,6 +884,25 @@ function buildEmptyGrid(containerId,player){
 // Uses scrollHeight to detect true content size even when overflow:hidden clips it.
 function autoSizeAbilCards(){
   requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    // First pass: shrink the name row (name + badge) so it never overflows
+    // the card width. This runs before fx sizing so the fixed-height measure
+    // below sees the final name height.
+    document.querySelectorAll(".ac .an-row").forEach(row=>{
+      const card=row.closest(".ac");
+      if(!card||!card.offsetWidth)return;
+      const nameEl=row.querySelector(".an");
+      if(!nameEl)return;
+      // Available width inside the card, minus a little breathing room on each side
+      const avail=card.clientWidth-14;
+      let size=13; // default .an size
+      nameEl.style.fontSize=size+"px";
+      // Shrink until the whole row (name + any badge) fits, down to 8px
+      while(row.scrollWidth>avail&&size>8){
+        size-=0.5;
+        nameEl.style.fontSize=size+"px";
+      }
+    });
+
     document.querySelectorAll(".ac,.ac-sub-card").forEach(card=>{
       const cardH=card.offsetHeight;
       if(!cardH)return;
