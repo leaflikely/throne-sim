@@ -58,7 +58,8 @@ button{font-family:inherit;cursor:pointer}
    shared dice tray), not the outer panel edge. */
 .ps-disc-pile{display:flex;flex-direction:column;align-items:center;gap:1px;cursor:pointer;flex-shrink:0}
 /* Leaflet button: stacks with the CP counter, mirrored top/bottom for p1/p2 */
-.ps-cp-stack{display:flex;flex-direction:column;align-items:center;gap:4px}
+/* Note: Leaflet is now a standalone .layout-obj (see layout editor below),
+   no longer nested inside the CP counter. */
 /* HP/CP block sits at the tray-side edge; the .ps-dice-line gap above already
    gives the HP minus button clearance from the dice, without shifting this
    whole block toward the panel's outer edge. */
@@ -85,6 +86,25 @@ button{font-family:inherit;cursor:pointer}
 .ps-reset-btn{padding:5px 8px;border-radius:5px;border:1.5px solid var(--bdrhi);background:transparent;color:var(--txtd);font-size:8px;font-weight:700;cursor:pointer;letter-spacing:.5px;transition:border-color .12s,color .12s}
 .ps-reset-btn:hover:not(:disabled){border-color:#C06030;color:#C06030}
 .ps-reset-btn:disabled{opacity:.35;cursor:not-allowed}
+
+/* ── Layout editor: draggable/resizable play-space objects ── */
+/* Each of the 5 editable objects (stats, leaflet, discard, all-btn, dice row)
+   is wrapped in .layout-obj. By default it just participates in normal flow.
+   Once a saved layout exists (or edit mode is active), JS switches it to
+   position:absolute with left/top/width/height driven by saved fractions. */
+.layout-obj{position:relative;min-width:4px;min-height:4px}
+.layout-obj.editing{outline:1.5px dashed var(--teal);outline-offset:2px;cursor:move;z-index:50}
+.layout-obj.editing:hover{outline-color:#00E8C0}
+.layout-handle{position:absolute;right:-6px;bottom:-6px;width:12px;height:12px;background:var(--teal);border:1.5px solid #06090F;border-radius:3px;cursor:nwse-resize;z-index:51;display:none}
+.layout-obj.editing .layout-handle{display:block}
+.layout-edit-btn{font-size:8px;font-weight:700;padding:3px 8px;border-radius:4px;border:1.5px solid var(--bdrhi);background:transparent;color:var(--txtd);cursor:pointer;white-space:nowrap;letter-spacing:.5px;transition:color .1s,border-color .1s}
+.layout-edit-btn:hover{border-color:var(--teal);color:var(--teal)}
+.layout-edit-btn.active{border-color:var(--teal);color:var(--teal);background:#00C4A015}
+.layout-save-btn{font-size:8px;font-weight:700;padding:3px 8px;border-radius:4px;border:1.5px solid #28A050;background:#28A05015;color:#28A050;cursor:pointer;white-space:nowrap;letter-spacing:.5px}
+.layout-save-btn:hover{background:#28A05030}
+.layout-reset-btn{font-size:8px;font-weight:700;padding:3px 8px;border-radius:4px;border:1.5px solid #C06030;background:transparent;color:#C06030;cursor:pointer;white-space:nowrap;letter-spacing:.5px}
+.layout-reset-btn:hover{background:#C0603020}
+#layout-toolbar{display:flex;gap:6px;align-items:center;justify-content:center;flex-wrap:wrap}
 /* Die in play space */
 .ps-die{width:52px;height:52px;border-radius:7px;border:2px solid;display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative;flex-shrink:0;background:var(--panel);user-select:none}
 .ps-die.in-tray{position:absolute;cursor:pointer}
@@ -343,29 +363,42 @@ button{font-family:inherit;cursor:pointer}
     <div class="ps-dice-line">
       <div class="ps-dice-stack" style="display:flex;flex-direction:column-reverse;gap:3px;flex:1;min-width:0">
         <div class="ps-dice-toprow">
-          <button class="ps-all-btn" onclick="sendAllToTray('p2')" title="Send all dice to tray">ALL</button>
+          <div class="layout-obj" data-obj="all" data-player="p2">
+            <button class="ps-all-btn" onclick="sendAllToTray('p2')" title="Send all dice to tray">ALL</button>
+            <div class="layout-handle"></div>
+          </div>
         </div>
-        <div class="ps-dicerow" id="p2dicerow-ps" data-player="p2"></div>
+        <div class="layout-obj" data-obj="dicerow" data-player="p2">
+          <div class="ps-dicerow" id="p2dicerow-ps" data-player="p2"></div>
+          <div class="layout-handle"></div>
+        </div>
       </div>
       <div class="ps-dice-right">
-        <div class="ps-stats-inline">
-          <div class="sg"><span class="slbl">HP</span><div class="svr">
-            <button class="sbtn" onclick="adjStat('p2','hp',-1)">&#8722;</button>
-            <span class="sval" id="p2hp" style="color:var(--hp)" onclick="editStat(this,'p2','hp')">50</span>
-            <button class="sbtn" onclick="adjStat('p2','hp',1)">+</button>
-          </div></div>
-          <div class="ps-cp-stack">
-            <button class="btn ps-leaflet-btn" id="p2leaflet-btn" style="display:none" onclick="openLeaflet('p2')">Leaflet</button>
+        <div class="layout-obj" data-obj="stats" data-player="p2">
+          <div class="ps-stats-inline">
+            <div class="sg"><span class="slbl">HP</span><div class="svr">
+              <button class="sbtn" onclick="adjStat('p2','hp',-1)">&#8722;</button>
+              <span class="sval" id="p2hp" style="color:var(--hp)" onclick="editStat(this,'p2','hp')">50</span>
+              <button class="sbtn" onclick="adjStat('p2','hp',1)">+</button>
+            </div></div>
             <div class="sg"><span class="slbl">CP</span><div class="svr">
               <button class="sbtn" onclick="adjStat('p2','cp',-1)">&#8722;</button>
               <span class="sval" id="p2cp" style="color:var(--gold)" onclick="editStat(this,'p2','cp')">2</span>
               <button class="sbtn" onclick="adjStat('p2','cp',1)">+</button>
             </div></div>
           </div>
+          <div class="layout-handle"></div>
         </div>
-        <div class="disc-pile ps-disc-pile" id="p2disc-pile" onclick="viewDiscard('p2')" title="View discard pile">
-          <div class="disc-inner" id="p2disc-vis"><span class="disc-n" id="p2disc-n">0</span></div>
-          <span class="disc-lbl">DISCARD</span>
+        <div class="layout-obj" data-obj="leaflet" data-player="p2">
+          <button class="btn ps-leaflet-btn" id="p2leaflet-btn" style="display:none" onclick="openLeaflet('p2')">Leaflet</button>
+          <div class="layout-handle"></div>
+        </div>
+        <div class="layout-obj" data-obj="discard" data-player="p2">
+          <div class="disc-pile ps-disc-pile" id="p2disc-pile" onclick="viewDiscard('p2')" title="View discard pile">
+            <div class="disc-inner" id="p2disc-vis"><span class="disc-n" id="p2disc-n">0</span></div>
+            <span class="disc-lbl">DISCARD</span>
+          </div>
+          <div class="layout-handle"></div>
         </div>
       </div>
     </div>
@@ -380,6 +413,11 @@ button{font-family:inherit;cursor:pointer}
       <button class="ps-roll-btn" id="tray-roll" onclick="rollTrayActive()">ROLL</button>
       <button class="ps-recall-btn" id="tray-recall" onclick="recallTrayActive()">RECALL</button>
       <button class="ps-reset-btn" id="tray-reset" ondblclick="resetTrayActive()" title="Double-click to reset">RESET</button>
+      <div id="layout-toolbar">
+        <button class="layout-edit-btn" id="layout-edit-btn" onclick="toggleLayoutEdit()" title="Drag or resize the HP/CP, Leaflet, Discard, ALL button, and dice row for P1">Edit Layout</button>
+        <button class="layout-save-btn" id="layout-save-btn" style="display:none" onclick="saveLayout()" title="Save P1's positions and mirror them onto P2">Save Layout</button>
+        <button class="layout-reset-btn" id="layout-reset-btn" style="display:none" onclick="resetLayout()" title="Clear saved layout and return to default positions">Reset Layout</button>
+      </div>
     </div>
   </div>
 
@@ -392,29 +430,42 @@ button{font-family:inherit;cursor:pointer}
     <div class="ps-dice-line">
       <div class="ps-dice-stack" style="display:flex;flex-direction:column;gap:3px;flex:1;min-width:0">
         <div class="ps-dice-toprow">
-          <button class="ps-all-btn" onclick="sendAllToTray('p1')" title="Send all dice to tray">ALL</button>
+          <div class="layout-obj" data-obj="all" data-player="p1">
+            <button class="ps-all-btn" onclick="sendAllToTray('p1')" title="Send all dice to tray">ALL</button>
+            <div class="layout-handle"></div>
+          </div>
         </div>
-        <div class="ps-dicerow" id="p1dicerow-ps" data-player="p1"></div>
+        <div class="layout-obj" data-obj="dicerow" data-player="p1">
+          <div class="ps-dicerow" id="p1dicerow-ps" data-player="p1"></div>
+          <div class="layout-handle"></div>
+        </div>
       </div>
       <div class="ps-dice-right">
-        <div class="disc-pile ps-disc-pile" id="p1disc-pile" onclick="viewDiscard('p1')" title="View discard pile">
-          <div class="disc-inner" id="p1disc-vis"><span class="disc-n" id="p1disc-n">0</span></div>
-          <span class="disc-lbl">DISCARD</span>
+        <div class="layout-obj" data-obj="discard" data-player="p1">
+          <div class="disc-pile ps-disc-pile" id="p1disc-pile" onclick="viewDiscard('p1')" title="View discard pile">
+            <div class="disc-inner" id="p1disc-vis"><span class="disc-n" id="p1disc-n">0</span></div>
+            <span class="disc-lbl">DISCARD</span>
+          </div>
+          <div class="layout-handle"></div>
         </div>
-        <div class="ps-stats-inline">
-          <div class="sg"><span class="slbl">HP</span><div class="svr">
-            <button class="sbtn" onclick="adjStat('p1','hp',-1)">&#8722;</button>
-            <span class="sval" id="p1hp" style="color:var(--hp)" onclick="editStat(this,'p1','hp')">50</span>
-            <button class="sbtn" onclick="adjStat('p1','hp',1)">+</button>
-          </div></div>
-          <div class="ps-cp-stack">
+        <div class="layout-obj" data-obj="stats" data-player="p1">
+          <div class="ps-stats-inline">
+            <div class="sg"><span class="slbl">HP</span><div class="svr">
+              <button class="sbtn" onclick="adjStat('p1','hp',-1)">&#8722;</button>
+              <span class="sval" id="p1hp" style="color:var(--hp)" onclick="editStat(this,'p1','hp')">50</span>
+              <button class="sbtn" onclick="adjStat('p1','hp',1)">+</button>
+            </div></div>
             <div class="sg"><span class="slbl">CP</span><div class="svr">
               <button class="sbtn" onclick="adjStat('p1','cp',-1)">&#8722;</button>
               <span class="sval" id="p1cp" style="color:var(--gold)" onclick="editStat(this,'p1','cp')">2</span>
               <button class="sbtn" onclick="adjStat('p1','cp',1)">+</button>
             </div></div>
-            <button class="btn ps-leaflet-btn" id="p1leaflet-btn" style="display:none" onclick="openLeaflet('p1')">Leaflet</button>
           </div>
+          <div class="layout-handle"></div>
+        </div>
+        <div class="layout-obj" data-obj="leaflet" data-player="p1">
+          <button class="btn ps-leaflet-btn" id="p1leaflet-btn" style="display:none" onclick="openLeaflet('p1')">Leaflet</button>
+          <div class="layout-handle"></div>
         </div>
       </div>
     </div>
@@ -810,27 +861,189 @@ window.addEventListener("mousemove",e=>{
     }
     return;
   }
+  if(layoutDrag.active){moveLayoutObj(e);return;}
+  if(layoutResize.active){resizeLayoutObj(e);return;}
 },{passive:true});
 
-window.addEventListener("mouseup",e=>{
-  if(ovDrag.active){
-    const tk=OV_TOKENS[ovDrag.id];
-    if(tk){
-      tk.el.classList.remove("dg");
-      // Send position as a fraction of the window so it lands sensibly on
-      // a differently-sized screen
-      netSend({t:"ov",id:ovDrag.id,rx:tk.x/window.innerWidth,ry:tk.y/window.innerHeight});
+// ─── LAYOUT EDITOR: drag/resize P1's play-space objects, mirror onto P2 ─────
+// Objects: stats (HP+CP together), leaflet, discard, all (the ALL button),
+// dicerow (the whole dice row — individual dice stay unmovable).
+const LAYOUT_OBJS=["stats","leaflet","discard","all","dicerow"];
+const LAYOUT_KEY="dt_layout_v1";
+let layoutEditing=false;
+let layoutDrag={active:false,el:null,ox:0,oy:0,bx:0,by:0};
+let layoutResize={active:false,el:null,ox:0,oy:0,bw:0,bh:0};
+
+function layoutObjEl(player,obj){
+  return document.querySelector('.layout-obj[data-obj="'+obj+'"][data-player="'+player+'"]');
+}
+
+// Ensure an object is position:absolute (relative to its .ps-hand-zone) so it
+// can be freely dragged, seeding left/top/width/height from its current
+// on-screen box the first time this runs.
+function primeAbsolute(el){
+  if(el.dataset.primed)return;
+  const zone=el.closest(".ps-hand-zone");
+  const zr=zone.getBoundingClientRect(),er=el.getBoundingClientRect();
+  el.style.position="absolute";
+  el.style.left=(er.left-zr.left)+"px";
+  el.style.top=(er.top-zr.top)+"px";
+  el.style.width=er.width+"px";
+  el.style.height=er.height+"px";
+  el.dataset.primed="1";
+}
+
+function toggleLayoutEdit(){
+  layoutEditing=!layoutEditing;
+  const btn=document.getElementById("layout-edit-btn");
+  const saveBtn=document.getElementById("layout-save-btn");
+  const resetBtn=document.getElementById("layout-reset-btn");
+  btn.classList.toggle("active",layoutEditing);
+  btn.textContent=layoutEditing?"Editing…":"Edit Layout";
+  saveBtn.style.display=layoutEditing?"":"none";
+  resetBtn.style.display=layoutEditing?"":"none";
+  LAYOUT_OBJS.forEach(obj=>{
+    const el=layoutObjEl("p1",obj);
+    if(!el)return;
+    if(layoutEditing){
+      primeAbsolute(el);
+      el.classList.add("editing");
+    }else{
+      el.classList.remove("editing");
     }
-    ovDrag.active=false;ovDrag.id=null;return;
-  }
-  if(cardDrag.active){
-    const id=cardDrag.id;
-    cardDrag.active=false;cardDrag.id=null;
-    commitCardDrop(id);
-    setTimeout(()=>{lastCardMoved=false;},80);
+  });
+}
+
+function startLayoutDrag(e,el){
+  if(!layoutEditing)return;
+  if(e.target.classList.contains("layout-handle"))return; // handle starts a resize, not a move
+  e.preventDefault();e.stopPropagation();
+  layoutDrag.active=true;layoutDrag.el=el;
+  layoutDrag.ox=e.clientX;layoutDrag.oy=e.clientY;
+  layoutDrag.bx=parseFloat(el.style.left)||0;
+  layoutDrag.by=parseFloat(el.style.top)||0;
+}
+function moveLayoutObj(e){
+  const el=layoutDrag.el;if(!el)return;
+  const zone=el.closest(".ps-hand-zone");const zr=zone.getBoundingClientRect();
+  const dx=e.clientX-layoutDrag.ox,dy=e.clientY-layoutDrag.oy;
+  let nx=layoutDrag.bx+dx,ny=layoutDrag.by+dy;
+  nx=Math.max(0,Math.min(zr.width-el.offsetWidth,nx));
+  ny=Math.max(0,Math.min(zr.height-el.offsetHeight,ny));
+  el.style.left=nx+"px";el.style.top=ny+"px";
+}
+function startLayoutResize(e,el){
+  if(!layoutEditing)return;
+  e.preventDefault();e.stopPropagation();
+  layoutResize.active=true;layoutResize.el=el;
+  layoutResize.ox=e.clientX;layoutResize.oy=e.clientY;
+  layoutResize.bw=el.offsetWidth;layoutResize.bh=el.offsetHeight;
+}
+function resizeLayoutObj(e){
+  const el=layoutResize.el;if(!el)return;
+  const dx=e.clientX-layoutResize.ox,dy=e.clientY-layoutResize.oy;
+  const nw=Math.max(20,layoutResize.bw+dx),nh=Math.max(16,layoutResize.bh+dy);
+  el.style.width=nw+"px";el.style.height=nh+"px";
+  // Scale inner content to match, rather than just clipping/stretching a
+  // fixed-size child inside a bigger box.
+  const scaleX=nw/layoutResize.bw,scaleY=nh/layoutResize.bh;
+  const scale=Math.min(scaleX,scaleY);
+  const inner=el.firstElementChild;
+  if(inner)inner.style.transform="scale("+scale+")";
+  el.dataset.scale=scale;
+}
+
+// Wire up mousedown for drag (on the object) and resize (on its handle).
+// Delegated once at the document level so it works for both hand zones.
+document.addEventListener("mousedown",e=>{
+  if(!layoutEditing)return;
+  const handle=e.target.closest(".layout-handle");
+  if(handle){
+    const el=handle.closest(".layout-obj");
+    if(el&&el.dataset.player==="p1")startLayoutResize(e,el);
     return;
   }
+  const el=e.target.closest(".layout-obj");
+  if(el&&el.dataset.player==="p1"&&el.classList.contains("editing"))startLayoutDrag(e,el);
 });
+
+// Save P1's current positions/sizes (as fractions of its hand-zone), apply
+// them permanently, mirror the result onto P2, and persist to localStorage.
+function saveLayout(){
+  const data={};
+  LAYOUT_OBJS.forEach(obj=>{
+    const el=layoutObjEl("p1",obj);if(!el)return;
+    const zone=el.closest(".ps-hand-zone");const zr=zone.getBoundingClientRect();
+    const left=parseFloat(el.style.left)||0,top=parseFloat(el.style.top)||0;
+    const w=el.offsetWidth,h=el.offsetHeight;
+    data[obj]={
+      xf:left/zr.width, yf:top/zr.height,
+      wf:w/zr.width, hf:h/zr.height,
+      scale:parseFloat(el.dataset.scale)||1,
+    };
+  });
+  try{localStorage.setItem(LAYOUT_KEY,JSON.stringify(data));}catch(err){}
+  applyLayout(data);
+  if(layoutEditing)toggleLayoutEdit();
+}
+
+// Apply saved fractional positions to BOTH players. P2 mirrors P1 vertically
+// (P1's hand-zone sits at the bottom of the play space, P2's at the top, so
+// "same distance from the tray-side edge" flips the y-fraction) and
+// horizontally in the sense that left/right stays left/right (both zones
+// read left-to-right the same way), matching how the two zones already
+// mirror each other via flex-direction.
+function applyLayout(data){
+  if(!data)return;
+  ["p1","p2"].forEach(player=>{
+    LAYOUT_OBJS.forEach(obj=>{
+      const el=layoutObjEl(player,obj);if(!el)return;
+      const d=data[obj];if(!d)return;
+      const zone=el.closest(".ps-hand-zone");if(!zone)return;
+      const zr=zone.getBoundingClientRect();
+      let xf=d.xf,yf=d.yf;
+      if(player==="p2"){
+        // Mirror vertically within the zone: flip distance from the top edge
+        // to distance from the bottom edge (P2's zone is P1's zone flipped).
+        yf=1-d.yf-d.hf;
+      }
+      el.style.position="absolute";
+      el.style.left=(xf*zr.width)+"px";
+      el.style.top=(yf*zr.height)+"px";
+      el.style.width=(d.wf*zr.width)+"px";
+      el.style.height=(d.hf*zr.height)+"px";
+      el.dataset.primed="1";
+      const inner=el.firstElementChild;
+      if(inner&&d.scale&&d.scale!==1)inner.style.transform="scale("+d.scale+")";
+    });
+  });
+}
+
+function resetLayout(){
+  try{localStorage.removeItem(LAYOUT_KEY);}catch(err){}
+  ["p1","p2"].forEach(player=>{
+    LAYOUT_OBJS.forEach(obj=>{
+      const el=layoutObjEl(player,obj);if(!el)return;
+      el.style.position="";el.style.left="";el.style.top="";
+      el.style.width="";el.style.height="";
+      delete el.dataset.primed;delete el.dataset.scale;
+      const inner=el.firstElementChild;
+      if(inner)inner.style.transform="";
+    });
+  });
+  if(layoutEditing)toggleLayoutEdit();
+}
+
+function loadSavedLayout(){
+  let raw=null;try{raw=localStorage.getItem(LAYOUT_KEY);}catch(err){}
+  if(!raw)return;
+  let data=null;try{data=JSON.parse(raw);}catch(err){return;}
+  if(!data)return;
+  applyLayout(data);
+}
+// Re-apply on resize so the saved fractional layout stays correct at any
+// window size (positions are stored as fractions of the hand-zone, not px).
+window.addEventListener("resize",()=>loadSavedLayout());
 
 // Hand mousedown — lifts card onto overlay (attached to both hand strips)
 function attachHandDrag(handEl){
@@ -1997,6 +2210,7 @@ window.addEventListener("load",()=>{
   buildGrids();renderDice("p1");renderDice("p2");renderHands();renderTokens("p1");renderTokens("p2");
   initDieDrag();
   observeAbilSizing();
+  loadSavedLayout();
 });
 window.addEventListener("resize",()=>autoSizeAbilCards());
 
