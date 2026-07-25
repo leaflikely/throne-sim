@@ -1038,8 +1038,10 @@ function buildGrid(containerId,player){
     }
     if(ab.t==="ult"){
       if(pairId&&colOf[pairId]){
-        html+=buildAbilCard(a,ab,upgraded,char,colOf[pairId],2,1);
-      }else if(!char.abilities.find(x=>x.t==="def")){
+        // already emitted as part of the off-ability's nested col-pair below
+        return;
+      }
+      if(!char.abilities.find(x=>x.t==="def")){
         // no def ability at all — ult still needs to render on its own
         html+=buildAbilCard(a,ab,upgraded,char,8,2,1);
       }
@@ -1135,9 +1137,11 @@ function autoSizeAbilCards(){
       });
       // Safety pass: bold keyword spans (e.g. "Activate Nevermore") can push
       // actual rendered height a hair past the binary-search estimate, or a
-      // single long word can be wider than the card at this size (which forces
-      // an ugly mid-word break). Re-check at final paint size and step down
-      // until it truly fits both dimensions.
+      // single long word can be wider than the card at this size. Since
+      // overflow-wrap:break-word already resolves that by breaking the word
+      // mid-letter (which would make scrollWidth report "fine" afterward),
+      // temporarily turn overflow-wrap off to measure TRUE overflow first.
+      fx.style.overflowWrap="normal";
       while((fx.scrollHeight>fxTarget||fx.scrollWidth>fx.clientWidth)&&final>8){
         final-=1;
         fx.style.fontSize=final+"px";
@@ -1145,6 +1149,7 @@ function autoSizeAbilCards(){
           const sz=Math.max(8,final-1);s.setAttribute("width",sz);s.setAttribute("height",sz);
         });
       }
+      fx.style.overflowWrap="break-word"; // restore as a last-resort safety net
     });
   }));
 }
