@@ -118,7 +118,7 @@ button{font-family:inherit;cursor:pointer}
 .areq-txt{font-size:9px;color:var(--gold);line-height:1;font-weight:600}
 .abadge{font-size:7px;font-weight:700;padding:1px 5px;border-radius:3px;white-space:nowrap;align-self:center;flex-shrink:0}
 /* fx: auto-scaled to fill remaining top-half space */
-.af{font-size:10px;color:#7A8FA8;line-height:1.55;overflow:hidden;margin-top:3px;padding-top:5px;border-top:1px solid var(--bdr);text-align:center;width:100%}
+.af{font-size:10px;color:#7A8FA8;line-height:1.4;overflow:hidden;margin-top:2px;padding-top:4px;border-top:1px solid var(--bdr);text-align:center;width:100%}
 .af .die-ico{display:inline-flex;vertical-align:middle;line-height:0;margin:0 1px}
 /* Pull Card button — arrow icon inline with ability name */
 .pull-btn{font-size:10px;line-height:1;padding:1px 4px;border-radius:3px;border:1px solid var(--bdrhi);background:transparent;color:var(--txtd);cursor:pointer;transition:color .1s,border-color .1s;flex-shrink:0}
@@ -479,7 +479,7 @@ window.removeOverlayToken=removeOverlayToken;
 // Nevermore dial — per player
 const NM_DIALS={p1:0,p2:0};
 function adjNM(player,d){
-  NM_DIALS[player]=Math.max(0,Math.min(3,NM_DIALS[player]+d));
+  NM_DIALS[player]=(NM_DIALS[player]+d+4)%4; // loops 0→1→2→3→0
   const el=document.getElementById("nm-dial-"+player);if(el)el.textContent=NM_DIALS[player];
   netSend({t:"nm",p:player,v:NM_DIALS[player]});
 }
@@ -849,7 +849,7 @@ function buildEmptyGrid(containerId,player){
 // Scale .af (effect text) to fill all available card space below the fixed header.
 // Uses scrollHeight to detect true content size even when overflow:hidden clips it.
 function autoSizeAbilCards(){
-  requestAnimationFrame(()=>{
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
     document.querySelectorAll(".ac,.ac-sub-card").forEach(card=>{
       const cardH=card.offsetHeight;
       if(!cardH)return;
@@ -865,25 +865,25 @@ function autoSizeAbilCards(){
       // Card vertical padding (~14px) + gaps between children
       fixedH+=14+(card.children.length-1)*4;
 
-      const fxTarget=Math.max(14,cardH-fixedH-6); // 6px buffer prevents last-line clipping
+      const fxTarget=Math.max(12,cardH-fixedH-3); // small buffer prevents last-line clipping
 
       // Binary search: use scrollHeight so overflow:hidden doesn't hide overflowing content
-      let lo=9,hi=24;
+      let lo=8,hi=22;
       for(let i=0;i<11;i++){
         const mid=((lo+hi)/2)|0;
         fx.style.fontSize=mid+"px";
         fx.querySelectorAll("svg").forEach(s=>{
-          const sz=Math.max(9,mid-1);s.setAttribute("width",sz);s.setAttribute("height",sz);
+          const sz=Math.max(8,mid-1);s.setAttribute("width",sz);s.setAttribute("height",sz);
         });
         if(fx.scrollHeight<=fxTarget)lo=mid+1; else hi=mid-1;
       }
-      const final=Math.max(9,lo-1);
+      const final=Math.max(8,lo-1);
       fx.style.fontSize=final+"px";
       fx.querySelectorAll("svg").forEach(s=>{
-        const sz=Math.max(9,final-1);s.setAttribute("width",sz);s.setAttribute("height",sz);
+        const sz=Math.max(8,final-1);s.setAttribute("width",sz);s.setAttribute("height",sz);
       });
     });
-  });
+  }));
 }
 
 // ─── TOKENS ──────────────────────────────────────────────────────────────────
