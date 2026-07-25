@@ -19,12 +19,12 @@ const I={
 // First letter of each type is the {X} tag used in ability text:
 // {P}=PICKAXE {H}=HAMMER {A}=ANVIL
 const FACES=[null,
-  {t:"PICKAXE",c:"#C87828"},
-  {t:"PICKAXE",c:"#C87828"},
-  {t:"PICKAXE",c:"#C87828"},
-  {t:"HAMMER", c:"#7890B0"},
-  {t:"HAMMER", c:"#7890B0"},
-  {t:"ANVIL",  c:"#C04030"},
+  {t:"PICKAXE",c:"#3A78D0"},
+  {t:"PICKAXE",c:"#3A78D0"},
+  {t:"PICKAXE",c:"#3A78D0"},
+  {t:"HAMMER", c:"#E08020"},
+  {t:"HAMMER", c:"#E08020"},
+  {t:"ANVIL",  c:"#E8ECF2"},
 ];
 
 // ─── ABILITIES ───────────────────────────────────────────────────────────────
@@ -49,11 +49,11 @@ const ABIL=[
    fx:"Mine your deck.\nYou may reveal all ORE mined this way and place them on THE FORGE.\n8 Blockable"},
   {id:"smelt",  n:"SMELTING TIME",c:"#8040C8",t:"off",
    req:[{type:"anvil",count:4}],
-   fx:"Draw 1\n9 Undefendable"},
-  {id:"masterwork",n:"MASTERWORK",c:"#1E6830",t:"def",
+   fx:"Draw 1 · 9 Undefendable"},
+  {id:"masterwork",n:"MASTERWORK",c:"#1E6830",t:"def",defDice:1,
    req:[],
    fx:"On {P}, Mine your deck.\nOn {H}, double the effect of one Armor.\nOn {A}, double the effect of up to two different Armor."},
-  {id:"ult",    n:"FINAL TOUCHES!",c:"#906808",t:"ult",
+  {id:"ult",    n:"FINAL TOUCHES!",c:"#906808",t:"ult",ultDice:5,pairWith:"smelt",
    req:[{type:"anvil",count:5}],hideReq:true,
    fx:"Search your deck for any one ORE.\nPlace it on THE FORGE.\n14 Undefendable"},
 ];
@@ -116,6 +116,7 @@ window.DT_CHARACTERS["forgemaster"] = {
   renderTokens:        renderTokens,
   initTokenState:      initTokenState,
   hasHexTokens:        false,
+  leaflet:             "Forgemaster_insert.png",
 };
 
 })();
