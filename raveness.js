@@ -45,10 +45,10 @@ const ABIL=[
   {id:"chamber", n:"CHAMBER",          c:"#8040C8",t:"off",
    req:[{type:"eye",count:4}],
    fx:"Activate Nevermore twice\n7 Undefendable"},
-  {id:"nothing", n:"NOTHING MORE",     c:"#1E6830",t:"def",
+  {id:"nothing", n:"NOTHING MORE",     c:"#1E6830",t:"def",defDice:5,
    req:[],
    fx:"On {T}{T}, 2 Undefendable.\nOn {F}{F}, Block 2.\nOn {E}{E}, Activate Nevermore."},
-  {id:"ult",     n:"FANTASTIC TERRORS!",c:"#906808",t:"ult",
+  {id:"ult",     n:"FANTASTIC TERRORS!",c:"#906808",t:"ult",ultDice:5,
    req:[],
    fx:"Activate Nevermore 3 times.\nInflict Hex. 13 Undefendable."},
 ];
