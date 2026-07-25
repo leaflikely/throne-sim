@@ -40,7 +40,7 @@ button{font-family:inherit;cursor:pointer}
 /* dice line: the 5-die row plus the deck/discard/leaflet controls */
 .ps-dice-line{display:flex;align-items:center;gap:8px}
 .ps-dice-left{display:flex;flex-direction:column;align-items:center;gap:3px;flex-shrink:0}
-.ps-dice-right{display:flex;align-items:center;gap:8px;flex-shrink:0;margin-left:auto}
+.ps-dice-right{display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0;margin-left:auto}
 .ps-hand-lbl{font-size:7px;font-weight:700;letter-spacing:1.5px;color:var(--txtd);white-space:nowrap;flex-shrink:0}
 /* single row of 5 dice — no wrapping */
 .ps-dicerow{display:flex;flex-wrap:nowrap;gap:5px;align-items:center;flex:1;min-width:0}
@@ -318,22 +318,22 @@ button{font-family:inherit;cursor:pointer}
       <div class="ps-dice-stack" style="display:flex;flex-direction:column-reverse;gap:3px;flex:1;min-width:0">
         <div class="ps-dice-toprow">
           <button class="ps-all-btn" onclick="sendAllToTray('p2')" title="Send all dice to tray">ALL</button>
-          <div class="ps-stats-inline">
-            <div class="sg"><span class="slbl">HP</span><div class="svr">
-              <button class="sbtn" onclick="adjStat('p2','hp',-1)">&#8722;</button>
-              <span class="sval" id="p2hp" style="color:var(--hp)" onclick="editStat(this,'p2','hp')">50</span>
-              <button class="sbtn" onclick="adjStat('p2','hp',1)">+</button>
-            </div></div>
-            <div class="sg"><span class="slbl">CP</span><div class="svr">
-              <button class="sbtn" onclick="adjStat('p2','cp',-1)">&#8722;</button>
-              <span class="sval" id="p2cp" style="color:var(--gold)" onclick="editStat(this,'p2','cp')">2</span>
-              <button class="sbtn" onclick="adjStat('p2','cp',1)">+</button>
-            </div></div>
-          </div>
         </div>
         <div class="ps-dicerow" id="p2dicerow-ps" data-player="p2"></div>
       </div>
       <div class="ps-dice-right">
+        <div class="ps-stats-inline">
+          <div class="sg"><span class="slbl">HP</span><div class="svr">
+            <button class="sbtn" onclick="adjStat('p2','hp',-1)">&#8722;</button>
+            <span class="sval" id="p2hp" style="color:var(--hp)" onclick="editStat(this,'p2','hp')">50</span>
+            <button class="sbtn" onclick="adjStat('p2','hp',1)">+</button>
+          </div></div>
+          <div class="sg"><span class="slbl">CP</span><div class="svr">
+            <button class="sbtn" onclick="adjStat('p2','cp',-1)">&#8722;</button>
+            <span class="sval" id="p2cp" style="color:var(--gold)" onclick="editStat(this,'p2','cp')">2</span>
+            <button class="sbtn" onclick="adjStat('p2','cp',1)">+</button>
+          </div></div>
+        </div>
         <button class="btn" id="p2leaflet-btn" style="display:none" onclick="openLeaflet('p2')">Leaflet</button>
       </div>
     </div>
@@ -361,22 +361,22 @@ button{font-family:inherit;cursor:pointer}
       <div class="ps-dice-stack" style="display:flex;flex-direction:column;gap:3px;flex:1;min-width:0">
         <div class="ps-dice-toprow">
           <button class="ps-all-btn" onclick="sendAllToTray('p1')" title="Send all dice to tray">ALL</button>
-          <div class="ps-stats-inline">
-            <div class="sg"><span class="slbl">HP</span><div class="svr">
-              <button class="sbtn" onclick="adjStat('p1','hp',-1)">&#8722;</button>
-              <span class="sval" id="p1hp" style="color:var(--hp)" onclick="editStat(this,'p1','hp')">50</span>
-              <button class="sbtn" onclick="adjStat('p1','hp',1)">+</button>
-            </div></div>
-            <div class="sg"><span class="slbl">CP</span><div class="svr">
-              <button class="sbtn" onclick="adjStat('p1','cp',-1)">&#8722;</button>
-              <span class="sval" id="p1cp" style="color:var(--gold)" onclick="editStat(this,'p1','cp')">2</span>
-              <button class="sbtn" onclick="adjStat('p1','cp',1)">+</button>
-            </div></div>
-          </div>
         </div>
         <div class="ps-dicerow" id="p1dicerow-ps" data-player="p1"></div>
       </div>
       <div class="ps-dice-right">
+        <div class="ps-stats-inline">
+          <div class="sg"><span class="slbl">HP</span><div class="svr">
+            <button class="sbtn" onclick="adjStat('p1','hp',-1)">&#8722;</button>
+            <span class="sval" id="p1hp" style="color:var(--hp)" onclick="editStat(this,'p1','hp')">50</span>
+            <button class="sbtn" onclick="adjStat('p1','hp',1)">+</button>
+          </div></div>
+          <div class="sg"><span class="slbl">CP</span><div class="svr">
+            <button class="sbtn" onclick="adjStat('p1','cp',-1)">&#8722;</button>
+            <span class="sval" id="p1cp" style="color:var(--gold)" onclick="editStat(this,'p1','cp')">2</span>
+            <button class="sbtn" onclick="adjStat('p1','cp',1)">+</button>
+          </div></div>
+        </div>
         <button class="btn" id="p1leaflet-btn" style="display:none" onclick="openLeaflet('p1')">Leaflet</button>
       </div>
     </div>
@@ -392,6 +392,11 @@ button{font-family:inherit;cursor:pointer}
   <div id="leaflet-box">
     <button id="leaflet-close" onclick="closeLeaflet()">✕</button>
     <img id="leaflet-img" src="" alt="Character Leaflet"/>
+    <div id="leaflet-nav" style="display:none;align-items:center;justify-content:center;gap:14px">
+      <button class="btn" id="leaflet-prev" onclick="leafletStep(-1)">&#8592; Prev</button>
+      <span id="leaflet-count" style="font-size:10px;font-weight:700;color:var(--txtd);letter-spacing:1px">1 / 1</span>
+      <button class="btn" id="leaflet-next" onclick="leafletStep(1)">Next &#8594;</button>
+    </div>
   </div>
 </div>
 
@@ -434,6 +439,23 @@ const CS={
   orange:{bg:"#221200",bdr:"#603010",lbl:"#C86010",tag:"ROLL PHASE"},
   red:   {bg:"#1E0808",bdr:"#501010",lbl:"#C02828",tag:"INSTANT"},
 };
+// Resolve a card's visual style. A card may override the type default with its
+// own `color` (a {bg,bdr,lbl,tag} partial) — used for ore cards.
+function cardStyle(c){
+  const base=CS[c.t]||CS.blue;
+  return c.color?{...base,...c.color}:base;
+}
+// Whether a card shows a CP badge. Ore cards have NO cp cost (not even 0).
+function cardHasCP(c){return !c.noCP;}
+// Build the CP badge HTML (or empty string if the card has no cost)
+function cpBadge(c,st){
+  if(!cardHasCP(c))return "";
+  return `<span class="hccp" style="color:${st.lbl};border-color:${st.bdr}">${c.cp}CP</span>`;
+}
+function cpBadgeOv(c,st){
+  if(!cardHasCP(c))return "";
+  return `<span class="card-ov-cp" style="color:${st.lbl};border-color:${st.bdr}">${c.cp}CP</span>`;
+}
 
 // ─── STATE ───────────────────────────────────────────────────────────────────
 function initP(){
@@ -545,7 +567,7 @@ let lastCardMoved=false;
 
 function liftCardFromHand(player,cid,startX,startY){
   const char=S.chars[player];const c=char?char.cards.find(x=>x.id===cid):null;if(!c)return;
-  const st=CS[c.t];
+  const st=cardStyle(c);
   const id="cov_"+player+"_"+cid.replace(/[^a-z0-9]/gi,"_");
 
   if(CARD_OV[id]){CARD_OV[id].el.remove();delete CARD_OV[id];}
@@ -553,7 +575,7 @@ function liftCardFromHand(player,cid,startX,startY){
   const el=document.createElement("div");
   el.className="card-ov ov-tok";
   el.style.cssText=`background:${st.bg};border-color:${st.bdr}`;
-  el.innerHTML=`<span class="card-ov-n" style="color:${st.lbl}">${splitCardName(c.n)}</span><span class="card-ov-art">${c.e||"🃏"}</span><span class="card-ov-cp" style="color:${st.lbl};border-color:${st.bdr}">${c.cp}CP</span>`;
+  el.innerHTML=`<span class="card-ov-n" style="color:${st.lbl}">${splitCardName(c.n)}</span><span class="card-ov-art">${c.e||"🃏"}</span>${cpBadgeOv(c,st)}`;
   el.dataset.cid=cid;el.dataset.player=player;
 
   const ov=document.getElementById("overlay");
@@ -766,9 +788,10 @@ const gtt=document.getElementById("gtt");
 let hovCard=null;
 function showTooltip(player,cid,rect){
   const char=S.chars[player],c=char?char.cards.find(x=>x.id===cid):null;if(!c)return;
-  const st=CS[c.t],isUpg=!!(char.cardUpgrades&&char.cardUpgrades[cid]);
+  const st=cardStyle(c),isUpg=!!(char.cardUpgrades&&char.cardUpgrades[cid]);
+  const cpTip=cardHasCP(c)?`<span style="font-size:10px;color:${st.lbl};font-weight:700">${c.cp}CP</span>`:"";
   gtt.style.borderColor=st.bdr;
-  gtt.innerHTML=`<div style="display:flex;justify-content:space-between;margin-bottom:3px"><span style="font-size:10px;color:${st.lbl};font-weight:700;line-height:1.3">${c.n}</span><span style="font-size:10px;color:${st.lbl};font-weight:700">${c.cp}CP</span></div><div style="font-size:7px;color:var(--txtd);background:${st.bg};border-radius:3px;padding:2px 5px;margin-bottom:7px;font-weight:700;letter-spacing:.5px">${st.tag}</div><div style="font-size:22px;text-align:center;margin-bottom:7px;line-height:1">${c.e||""}</div><p style="font-size:10.5px;color:var(--txt);margin:0;line-height:1.55">${c.x}</p>${isUpg?'<div style="font-size:8px;color:var(--teal);margin-top:7px;font-weight:700;border-top:1px solid var(--bdr);padding-top:5px">UPGRADE — drag onto matching ability</div>':""}`;
+  gtt.innerHTML=`<div style="display:flex;justify-content:space-between;margin-bottom:3px"><span style="font-size:10px;color:${st.lbl};font-weight:700;line-height:1.3">${c.n}</span>${cpTip}</div><div style="font-size:7px;color:var(--txtd);background:${st.bg};border-radius:3px;padding:2px 5px;margin-bottom:7px;font-weight:700;letter-spacing:.5px">${st.tag}</div><div style="font-size:22px;text-align:center;margin-bottom:7px;line-height:1">${c.e||""}</div><p style="font-size:10.5px;color:var(--txt);margin:0;line-height:1.55">${c.x}</p>${isUpg?'<div style="font-size:8px;color:var(--teal);margin-top:7px;font-weight:700;border-top:1px solid var(--bdr);padding-top:5px">UPGRADE — drag onto matching ability</div>':""}`;
   gtt.style.display="block";
   const tw=180,th=gtt.offsetHeight||200;
   let left=rect.left+rect.width/2-tw/2;left=Math.max(8,Math.min(window.innerWidth-tw-8,left));
@@ -827,10 +850,20 @@ function renderFxHTML(fx,char){
     if(!f||seen[f.t])return;seen[f.t]=true;
     out=out.replace(new RegExp("\\{"+f.t[0]+"\\}","g"),ico(i));
   });
-  return out
+  out=out
     .replace(/(\d+) Blockable/g,(_,n)=>blk(n))
-    .replace(/(\d+) Undefendable/g,(_,n)=>udf(n))
-    .replace(/\n/g,"<br>");
+    .replace(/(\d+) Undefendable/g,(_,n)=>udf(n));
+  // Character-defined keyword coloring: each entry is [phrase, color].
+  // Applied last so it wraps plain words (not the icons/badges above).
+  if(char.fxKeywords){
+    char.fxKeywords.forEach(([phrase,color])=>{
+      // word-boundary-safe, case-sensitive, escape regex specials
+      const esc=phrase.replace(/[.*+?^${}()|[\]\\]/g,"\\$&");
+      out=out.replace(new RegExp(esc,"g"),
+        `<span style="color:${color};font-weight:700">${phrase}</span>`);
+    });
+  }
+  return out.replace(/\n/g,"<br>");
 }
 function buildAbilCard(a,ab,upgraded,char,col,row,rowSpan){
   const isUlt=ab.t==="ult",isDef=ab.t==="def";
@@ -942,6 +975,7 @@ function buildGrid(containerId,player){
 
   el.innerHTML=html;
   if(typeof updateForgeDisplay==="function")updateForgeDisplay(player);
+  if(typeof refreshDynamicFx==="function")refreshDynamicFx(player,lastStraightFlags(player));
 }
 function buildGrids(){buildGrid("p1grid","p1");buildGrid("p2grid","p2");autoSizeAbilCards();}
 function buildEmptyGrid(containerId,player){
@@ -1322,6 +1356,24 @@ function initDieDrag(){
 // ─── ABILITY AVAILABILITY HIGHLIGHT ─────────────────────────────────────────
 // After a real roll, count the dice face types and check each ability's
 // requirements. Qualifying abilities get a soft glow; non-qualifying ones clear it.
+// Compute {straight4, straight5} from a player's current dice values.
+function lastStraightFlags(player){
+  const P=S[player];if(!P)return{straight4:false,straight5:false};
+  const vals=P.dice.map(d=>d.v).sort((a,b)=>a-b);
+  const uniq=[...new Set(vals)];
+  let straight4=false,straight5=false;
+  for(let i=0;i<=uniq.length-4;i++){
+    if(uniq[i+3]-uniq[i]===3&&uniq[i+1]-uniq[i]===1&&uniq[i+2]-uniq[i+1]===1&&uniq[i+3]-uniq[i+2]===1){
+      straight4=true;
+      if(i<=uniq.length-5&&uniq[i+4]-uniq[i+3]===1)straight5=true;
+    }
+  }
+  if(uniq.length===5&&uniq[4]-uniq[0]===4)straight5=true;
+  // Straights only "count" for highlighting once the player has actually rolled
+  if(!P.hasRolled)return{straight4:false,straight5:false};
+  return{straight4,straight5};
+}
+
 function updateAvailableAbils(player){
   const P=S[player],char=S.chars[player];
   const cells=document.querySelectorAll("#"+player+"grid .ac");
@@ -1337,21 +1389,8 @@ function updateAvailableAbils(player){
     if(f)counts[f.t.toLowerCase()]=(counts[f.t.toLowerCase()]||0)+1;
   });
 
-  // Check the straight combos: small straight = 1-2-3-4-5 or 2-3-4-5-6 in values
-  const vals=P.dice.map(d=>d.v).sort((a,b)=>a-b);
-  const vStr=vals.join("");
-  const isSmallStraight=["12345","23456"].includes(vStr)||
-    vStr.replace(/(.)\1+/g,"$1").length>=4&&(vStr.includes("1234")||vStr.includes("2345")||vStr.includes("3456")||vStr.includes("4567")||vStr.includes("5678"));
-  // Simpler: check for 4 consecutive values anywhere in the sorted set
-  const uniq=[...new Set(vals)];
-  let straight4=false,straight5=false;
-  for(let i=0;i<=uniq.length-4;i++){
-    if(uniq[i+3]-uniq[i]===3&&uniq[i+1]-uniq[i]===1&&uniq[i+2]-uniq[i+1]===1&&uniq[i+3]-uniq[i+2]===1){
-      straight4=true;
-      if(i<=uniq.length-5&&uniq[i+4]-uniq[i+3]===1)straight5=true;
-    }
-  }
-  if(uniq.length===5&&uniq[4]-uniq[0]===4)straight5=true;
+  // Check the straight combos via the shared helper
+  const {straight4,straight5}=lastStraightFlags(player);
 
   cells.forEach(cell=>{
     const abilId=cell.dataset.abilid;
@@ -1396,6 +1435,32 @@ function updateAvailableAbils(player){
       cell.style.setProperty("--avail-color",ab.c+"40");
     }
   });
+
+  // Re-color any ability with dynamic text (e.g. Armored Up's straights/armor)
+  refreshDynamicFx(player,{straight4,straight5});
+}
+
+// Recompute live-colored ability text. Called after rolls and armor changes.
+// An ability opts in with a `dynamicFx(ctx)` function returning HTML for its
+// effect block; ctx carries the current straight flags and token state.
+function refreshDynamicFx(player,flags){
+  const char=S.chars[player];if(!char)return;
+  flags=flags||{};
+  const ctx={
+    straight4:!!flags.straight4,
+    straight5:!!flags.straight5,
+    tokens:S[player].tokens||{},
+    char:char,
+  };
+  char.abilities.forEach(a=>{
+    const ab=(S.upgrades[player][a.id])||a;
+    if(typeof ab.dynamicFx!=="function")return;
+    const cell=document.querySelector("#"+player+"grid .ac[data-abilid='"+a.id+"']");
+    if(!cell)return;
+    const af=cell.querySelector(".af");
+    if(af)af.innerHTML=renderFxHTML(ab.dynamicFx(ctx),char);
+  });
+  autoSizeAbilCards();
 }
 
 function updateDiscardDisplay(player){
@@ -1453,11 +1518,11 @@ function renderHands(){
     }
     hc.innerHTML=P.hand.map(id=>{
       const c=byId(p,id);if(!c)return"";
-      const st=CS[c.t];
+      const st=cardStyle(c);
       return`<div class="hcard" data-cid="${id}" data-player="${p}" style="background:${st.bg};border-color:${st.bdr};cursor:grab">\
 <span class="hcn" style="color:${st.lbl}">${splitCardName(c.n)}</span>\
 <span class="hcart">${c.e||"🃏"}</span>\
-<span class="hccp" style="color:${st.lbl};border-color:${st.bdr}">${c.cp}CP</span></div>`;
+${cpBadge(c,st)}</div>`;
     }).join("");
   });
 }
@@ -1498,12 +1563,12 @@ function openPileViewer(p,source){
   } else {
     pile.forEach(cid=>{
       const c=char.cards.find(x=>x.id===cid);if(!c)return;
-      const st=CS[c.t];
+      const st=cardStyle(c);
       const card=document.createElement("div");
       card.className="hcard";
       card.dataset.cid=cid;card.dataset.player=p;
       card.style.cssText=`background:${st.bg};border-color:${st.bdr};cursor:grab;width:116px;height:100px;flex-shrink:0`;
-      card.innerHTML=`<span class="hcn" style="color:${st.lbl}">${splitCardName(c.n)}</span><span class="hcart">${c.e||"🃏"}</span><span class="hccp" style="color:${st.lbl};border-color:${st.bdr}">${c.cp}CP</span>`;
+      card.innerHTML=`<span class="hcn" style="color:${st.lbl}">${splitCardName(c.n)}</span><span class="hcart">${c.e||"🃏"}</span>${cpBadge(c,st)}`;
       card.addEventListener("mousedown",e=>{
         if(e.button!==0)return;
         e.preventDefault();e.stopPropagation();
@@ -1531,14 +1596,14 @@ function liftCardFromPile(player,cid,source,mx,my){
   if(source==="forge")updateForgeDisplay(player);
   else updateDiscardDisplay(player);
   closeDiscardPanel();
-  const st=CS[c.t];
+  const st=cardStyle(c);
   const id="cov_"+player+"_"+cid.replace(/[^a-z0-9]/gi,"_");
   if(CARD_OV[id]){CARD_OV[id].el.remove();delete CARD_OV[id];}
   const startX=mx-60,startY=my-50;
   const el=document.createElement("div");
   el.className="card-ov ov-tok";
   el.style.cssText=`background:${st.bg};border-color:${st.bdr};position:absolute;left:${startX}px;top:${startY}px`;
-  el.innerHTML=`<span class="card-ov-n" style="color:${st.lbl}">${splitCardName(c.n)}</span><span class="card-ov-art">${c.e||"🃏"}</span><span class="card-ov-cp" style="color:${st.lbl};border-color:${st.bdr}">${c.cp}CP</span>`;
+  el.innerHTML=`<span class="card-ov-n" style="color:${st.lbl}">${splitCardName(c.n)}</span><span class="card-ov-art">${c.e||"🃏"}</span>${cpBadgeOv(c,st)}`;
   el.dataset.cid=cid;el.dataset.player=player;el.id=id;
   document.getElementById("overlay").appendChild(el);
   CARD_OV[id]={el,cid,player,x:startX,y:startY};
@@ -1571,11 +1636,26 @@ document.getElementById("discard-panel").addEventListener("mousedown",e=>{
 });
 
 // ─── LEAFLET VIEWER ───────────────────────────────────────────────────────────
+// cd.leaflet may be a single image path (string) or a list of paths (array).
+let leafletImages=[],leafletIdx=0;
 function openLeaflet(player){
   const cd=S.chars[player];
   if(!cd||!cd.leaflet)return;
-  document.getElementById("leaflet-img").src=cd.leaflet;
+  leafletImages=Array.isArray(cd.leaflet)?cd.leaflet.slice():[cd.leaflet];
+  leafletIdx=0;
+  showLeafletImage();
+  document.getElementById("leaflet-nav").style.display=leafletImages.length>1?"flex":"none";
   document.getElementById("leaflet-panel").classList.add("open");
+}
+function showLeafletImage(){
+  if(!leafletImages.length)return;
+  document.getElementById("leaflet-img").src=leafletImages[leafletIdx];
+  document.getElementById("leaflet-count").textContent=(leafletIdx+1)+" / "+leafletImages.length;
+}
+function leafletStep(dir){
+  if(!leafletImages.length)return;
+  leafletIdx=(leafletIdx+dir+leafletImages.length)%leafletImages.length;
+  showLeafletImage();
 }
 function closeLeaflet(){
   document.getElementById("leaflet-panel").classList.remove("open");
@@ -1584,7 +1664,10 @@ document.getElementById("leaflet-panel").addEventListener("mousedown",e=>{
   if(e.target===document.getElementById("leaflet-panel"))closeLeaflet();
 });
 document.addEventListener("keydown",e=>{
+  const open=document.getElementById("leaflet-panel").classList.contains("open");
   if(e.key==="Escape")closeLeaflet();
+  else if(open&&e.key==="ArrowLeft")leafletStep(-1);
+  else if(open&&e.key==="ArrowRight")leafletStep(1);
 });
 function applyUpgrade(player,cardId,abilId){
   const char=S.chars[player];if(!char||S.upgrades[player][abilId])return;
@@ -1833,7 +1916,7 @@ var NET={on:false,me:null,ws:null,room:null,applying:false,restore:null,
 // Character files (raveness.js etc.) call these:
 function netCanEdit(player){return !NET.on||player===NET.me;}
 window.netCanEdit=netCanEdit;
-window.netTokens=function(p){netSendTok(p);};
+window.netTokens=function(p){netSendTok(p);if(typeof refreshDynamicFx==="function")refreshDynamicFx(p,lastStraightFlags(p));};
 window.netFlush=function(p){ // apply messages that arrived before the character loaded
   const q=NET.pending[p];NET.pending[p]=[];
   q.forEach(d=>{NET.applying=true;try{netApply(d);}finally{NET.applying=false;}});
@@ -2003,14 +2086,14 @@ function applyRemoteCards(d){
 // restoring my own cards after a refresh). withDrag=true attaches dragging.
 function makeBoardCard(player,cid,id,x,y,withDrag){
   const char=S.chars[player];const c=char?char.cards.find(k=>k.id===cid):null;if(!c)return;
-  const st=CS[c.t];
+  const st=cardStyle(c);
   if(CARD_OV[id]){CARD_OV[id].el.remove();delete CARD_OV[id];}
   const el=document.createElement("div");
   el.className="card-ov ov-tok";
   el.style.cssText="background:"+st.bg+";border-color:"+st.bdr+";position:absolute;left:"+x+"px;top:"+y+"px";
   el.innerHTML='<span class="card-ov-n" style="color:'+st.lbl+'">'+splitCardName(c.n)+'</span>'
     +'<span class="card-ov-art">'+(c.e||"🃏")+'</span>'
-    +'<span class="card-ov-cp" style="color:'+st.lbl+';border-color:'+st.bdr+'">'+c.cp+'CP</span>';
+    +cpBadgeOv(c,st);
   el.dataset.cid=cid;el.dataset.player=player;el.id=id;
   document.getElementById("overlay").appendChild(el);
   CARD_OV[id]={el:el,cid:cid,player:player,x:x,y:y};
