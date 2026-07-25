@@ -49,16 +49,13 @@ button{font-family:inherit;cursor:pointer}
 .ps-stats-inline{display:flex;align-items:center;gap:14px}
 .ps-all-btn{font-size:8px;font-weight:700;padding:3px 8px;border-radius:4px;border:1.5px solid var(--bdrhi);background:transparent;color:var(--txtd);cursor:pointer;white-space:nowrap;flex-shrink:0;transition:color .1s,border-color .1s}
 .ps-all-btn:hover{border-color:var(--teal);color:var(--teal)}
-/* Left-corner stack: discard pile + leaflet button, pinned to a corner of the
-   play-space hand zone. P1 stacks up from the bottom-left; P2 stacks down
-   from the top-left (mirrored), so leaflet sits just above P1's HP/CP row
-   and just below P2's. */
-.ps-corner-stack{position:absolute;left:8px;display:flex;flex-direction:column;align-items:center;gap:5px;z-index:2}
-#p1hand-zone .ps-corner-stack{bottom:6px;flex-direction:column-reverse}
-#p2hand-zone .ps-corner-stack{top:6px}
-.ps-disc-pile{display:flex;flex-direction:column;align-items:center;gap:1px;cursor:pointer}
-/* Nudge HP/CP counters right so the HP minus button clears the dice */
-.ps-stats-inline{margin-left:6px}
+/* Discard pile: pinned to the tray-side corner of each hand zone (near the
+   shared dice tray), not the outer panel edge. */
+.ps-disc-pile{display:flex;flex-direction:column;align-items:center;gap:1px;cursor:pointer;flex-shrink:0}
+/* Leaflet button: stacks with the CP counter, mirrored top/bottom for p1/p2 */
+.ps-cp-stack{display:flex;flex-direction:column;align-items:center;gap:4px}
+/* Nudge HP/CP (and discard/leaflet) block right so the HP minus button clears the dice */
+.ps-dice-right{margin-left:14px!important}
 /* Center area: tray + controls */
 .ps-center{display:flex;flex-direction:row;gap:12px;align-items:center;justify-content:center;flex:1;min-height:0;width:100%;overflow:hidden;padding:8px}
 /* Shared dice tray */
@@ -141,7 +138,7 @@ button{font-family:inherit;cursor:pointer}
 .areq-txt{font-size:9px;color:var(--gold);line-height:1;font-weight:600}
 .abadge{font-size:7px;font-weight:700;padding:1px 5px;border-radius:3px;white-space:nowrap;align-self:center;flex-shrink:0}
 /* fx: auto-scaled to fill remaining top-half space */
-.af{font-size:10px;color:#7A8FA8;line-height:1.4;overflow:hidden;margin-top:2px;padding-top:4px;border-top:1px solid var(--bdr);text-align:center;width:100%}
+.af{font-size:10px;color:#7A8FA8;line-height:1.4;overflow:hidden;margin-top:2px;padding-top:4px;border-top:1px solid var(--bdr);text-align:center;width:100%;overflow-wrap:break-word;word-break:break-word}
 .af .die-ico{display:inline-flex;vertical-align:middle;line-height:0;margin:0 1px}
 /* Pull Card button — arrow icon inline with ability name */
 .pull-btn{font-size:10px;line-height:1;padding:1px 4px;border-radius:3px;border:1px solid var(--bdrhi);background:transparent;color:var(--txtd);cursor:pointer;transition:color .1s,border-color .1s;flex-shrink:0}
@@ -312,13 +309,6 @@ button{font-family:inherit;cursor:pointer}
 <div id="right-panel">
   <!-- P2 Dice Hand — top -->
   <div class="ps-hand-zone" id="p2hand-zone">
-    <div class="ps-corner-stack">
-      <button class="btn ps-leaflet-btn" id="p2leaflet-btn" style="display:none" onclick="openLeaflet('p2')">Leaflet</button>
-      <div class="disc-pile ps-disc-pile" id="p2disc-pile" onclick="viewDiscard('p2')" title="View discard pile">
-        <div class="disc-inner" id="p2disc-vis"><span class="disc-n" id="p2disc-n">0</span></div>
-        <span class="disc-lbl">DISCARD</span>
-      </div>
-    </div>
     <div class="ps-tokens-row">
       <div id="p2tokens" style="display:flex;gap:6px;align-items:center"></div>
       <div id="p2hex-spacer" style="width:0px;flex-shrink:0;transition:width .2s"></div>
@@ -337,11 +327,18 @@ button{font-family:inherit;cursor:pointer}
             <span class="sval" id="p2hp" style="color:var(--hp)" onclick="editStat(this,'p2','hp')">50</span>
             <button class="sbtn" onclick="adjStat('p2','hp',1)">+</button>
           </div></div>
-          <div class="sg"><span class="slbl">CP</span><div class="svr">
-            <button class="sbtn" onclick="adjStat('p2','cp',-1)">&#8722;</button>
-            <span class="sval" id="p2cp" style="color:var(--gold)" onclick="editStat(this,'p2','cp')">2</span>
-            <button class="sbtn" onclick="adjStat('p2','cp',1)">+</button>
-          </div></div>
+          <div class="ps-cp-stack">
+            <button class="btn ps-leaflet-btn" id="p2leaflet-btn" style="display:none" onclick="openLeaflet('p2')">Leaflet</button>
+            <div class="sg"><span class="slbl">CP</span><div class="svr">
+              <button class="sbtn" onclick="adjStat('p2','cp',-1)">&#8722;</button>
+              <span class="sval" id="p2cp" style="color:var(--gold)" onclick="editStat(this,'p2','cp')">2</span>
+              <button class="sbtn" onclick="adjStat('p2','cp',1)">+</button>
+            </div></div>
+          </div>
+        </div>
+        <div class="disc-pile ps-disc-pile" id="p2disc-pile" onclick="viewDiscard('p2')" title="View discard pile">
+          <div class="disc-inner" id="p2disc-vis"><span class="disc-n" id="p2disc-n">0</span></div>
+          <span class="disc-lbl">DISCARD</span>
         </div>
       </div>
     </div>
@@ -361,13 +358,6 @@ button{font-family:inherit;cursor:pointer}
 
   <!-- P1 Dice Hand — bottom -->
   <div class="ps-hand-zone" id="p1hand-zone">
-    <div class="ps-corner-stack">
-      <div class="disc-pile ps-disc-pile" id="p1disc-pile" onclick="viewDiscard('p1')" title="View discard pile">
-        <div class="disc-inner" id="p1disc-vis"><span class="disc-n" id="p1disc-n">0</span></div>
-        <span class="disc-lbl">DISCARD</span>
-      </div>
-      <button class="btn ps-leaflet-btn" id="p1leaflet-btn" style="display:none" onclick="openLeaflet('p1')">Leaflet</button>
-    </div>
     <div class="ps-tokens-row">
       <div id="p1tokens" style="display:flex;gap:6px;align-items:center"></div>
       <div id="p1hex-spacer" style="width:0px;flex-shrink:0;transition:width .2s"></div>
@@ -380,17 +370,24 @@ button{font-family:inherit;cursor:pointer}
         <div class="ps-dicerow" id="p1dicerow-ps" data-player="p1"></div>
       </div>
       <div class="ps-dice-right">
+        <div class="disc-pile ps-disc-pile" id="p1disc-pile" onclick="viewDiscard('p1')" title="View discard pile">
+          <div class="disc-inner" id="p1disc-vis"><span class="disc-n" id="p1disc-n">0</span></div>
+          <span class="disc-lbl">DISCARD</span>
+        </div>
         <div class="ps-stats-inline">
           <div class="sg"><span class="slbl">HP</span><div class="svr">
             <button class="sbtn" onclick="adjStat('p1','hp',-1)">&#8722;</button>
             <span class="sval" id="p1hp" style="color:var(--hp)" onclick="editStat(this,'p1','hp')">50</span>
             <button class="sbtn" onclick="adjStat('p1','hp',1)">+</button>
           </div></div>
-          <div class="sg"><span class="slbl">CP</span><div class="svr">
-            <button class="sbtn" onclick="adjStat('p1','cp',-1)">&#8722;</button>
-            <span class="sval" id="p1cp" style="color:var(--gold)" onclick="editStat(this,'p1','cp')">2</span>
-            <button class="sbtn" onclick="adjStat('p1','cp',1)">+</button>
-          </div></div>
+          <div class="ps-cp-stack">
+            <div class="sg"><span class="slbl">CP</span><div class="svr">
+              <button class="sbtn" onclick="adjStat('p1','cp',-1)">&#8722;</button>
+              <span class="sval" id="p1cp" style="color:var(--gold)" onclick="editStat(this,'p1','cp')">2</span>
+              <button class="sbtn" onclick="adjStat('p1','cp',1)">+</button>
+            </div></div>
+            <button class="btn ps-leaflet-btn" id="p1leaflet-btn" style="display:none" onclick="openLeaflet('p1')">Leaflet</button>
+          </div>
         </div>
       </div>
     </div>
