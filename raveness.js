@@ -213,16 +213,16 @@ function buildOverlayTokens(player, addFn, removeFn) {
   const pNum = player === "p1" ? "1" : "2";
   // The circle is 96px wide. Eye row: icon + player number inline, always visible.
   el.innerHTML = `
-    <div style="width:96px;height:96px;border-radius:50%;background:#0A1220;border:2.5px solid ${color};box-shadow:0 0 16px ${color}25;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;overflow:hidden;flex-shrink:0">
-      <div style="display:flex;align-items:center;gap:3px;line-height:0">
+    <div style="width:64px;height:64px;border-radius:50%;background:#0A1220;border:2px solid ${color};box-shadow:0 0 10px ${color}25;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;overflow:hidden;flex-shrink:0">
+      <div style="display:flex;align-items:center;gap:2px;line-height:0">
         ${I.eyeMed(color)}
-        <span style="font-size:11px;font-weight:700;color:${color};line-height:1">${pNum}</span>
+        <span style="font-size:8px;font-weight:700;color:${color};line-height:1">${pNum}</span>
       </div>
-      <span style="font-size:6.5px;font-weight:700;color:${color};letter-spacing:2px;line-height:1">NEVERMORE</span>
-      <div style="display:flex;align-items:center;gap:3px">
-        <button class="nmdbtn" style="border-color:${color};color:${color};width:16px;height:16px;font-size:12px" onclick="event.stopPropagation();adjNM('${player}',-1)">&#8722;</button>
-        <span id="nm-dial-${player}" style="font-size:14px;font-weight:700;color:${color};min-width:18px;text-align:center">0</span>
-        <button class="nmdbtn" style="border-color:${color};color:${color};width:16px;height:16px;font-size:12px" onclick="event.stopPropagation();adjNM('${player}',1)">+</button>
+      <span style="font-size:4.5px;font-weight:700;color:${color};letter-spacing:1px;line-height:1">NEVERMORE</span>
+      <div style="display:flex;align-items:center;gap:2px">
+        <button class="nmdbtn" style="border-color:${color};color:${color};width:12px;height:12px;font-size:9px" onclick="event.stopPropagation();adjNM('${player}',-1)">&#8722;</button>
+        <span id="nm-dial-${player}" style="font-size:10px;font-weight:700;color:${color};min-width:13px;text-align:center">0</span>
+        <button class="nmdbtn" style="border-color:${color};color:${color};width:12px;height:12px;font-size:9px" onclick="event.stopPropagation();adjNM('${player}',1)">+</button>
       </div>
     </div>
   `;
