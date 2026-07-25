@@ -163,23 +163,18 @@ function renderTokens(player, playerState, container) {
 function placeHexTokens(player) {
   const pLabel = player === "p1" ? "P1" : "P2";
   const pColor = player === "p1" ? "#00C4A0" : "#4890E0";
-  const strip = document.getElementById(player + "dstrip");
   const spacer = document.getElementById(player + "hex-spacer");
 
   for (let i = 0; i < 2; i++) {
     const id = "hex_" + player + "_" + i;
     if (document.getElementById(id)) continue;
 
+    // Spawn the tokens over the reserved spacer next to the feather pips
     let x = 400 + i * 36, y = window.innerHeight / 2;
-    if (spacer && strip) {
+    if (spacer) {
       const sr = spacer.getBoundingClientRect();
-      const str = strip.getBoundingClientRect();
       x = sr.left + i * 36;
-      y = str.top + str.height / 2 - 20;
-    } else if (strip) {
-      const str = strip.getBoundingClientRect();
-      x = str.right - 90 + i * 36;
-      y = str.top + str.height / 2 - 20;
+      y = sr.top + sr.height / 2 - 20;
     }
 
     const el = document.createElement("div");
