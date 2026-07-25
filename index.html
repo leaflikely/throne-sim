@@ -447,6 +447,9 @@ function applyCharacter(player,cd){
   if(window.netFlush)window.netFlush(player);
   if(NET.restore&&player===NET.me){const r=NET.restore;NET.restore=null;applyLocalSave(r);}
   else{netSendChar(player);netSendTok(player);netSendCards(player);}
+  // Backstop for slow (networked) loads: re-fit after layout has surely settled
+  setTimeout(autoSizeAbilCards,150);
+  setTimeout(autoSizeAbilCards,500);
 }
 
 // ─── OVERLAY ─────────────────────────────────────────────────────────────────
@@ -1526,8 +1529,24 @@ document.addEventListener("contextmenu",e=>{
 window.addEventListener("load",()=>{
   buildGrids();renderDice("p1");renderDice("p2");renderHands();renderTokens("p1");renderTokens("p2");
   initDieDrag();
+  observeAbilSizing();
 });
 window.addEventListener("resize",()=>autoSizeAbilCards());
+
+// Re-fit ability text whenever the grid areas actually change size. This makes
+// sizing independent of WHEN the character script finishes loading — the moment
+// the grid reaches its real height (even late, over a slow connection), the text
+// refits itself. Font changes don't alter the watched outer size, so no loop.
+let _abilRO=null;
+function observeAbilSizing(){
+  if(_abilRO||typeof ResizeObserver==="undefined")return;
+  let scheduled=false;
+  _abilRO=new ResizeObserver(()=>{
+    if(scheduled)return;scheduled=true;
+    requestAnimationFrame(()=>{scheduled=false;autoSizeAbilCards();});
+  });
+  ["p1sec","p2sec"].forEach(id=>{const el=document.getElementById(id);if(el)_abilRO.observe(el);});
+}
 
 // ─── HAND RESIZER ─────────────────────────────────────────────────────────────
 (function(){
