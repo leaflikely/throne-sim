@@ -44,6 +44,9 @@ button{font-family:inherit;cursor:pointer}
 .ps-hand-lbl{font-size:7px;font-weight:700;letter-spacing:1.5px;color:var(--txtd);white-space:nowrap;flex-shrink:0}
 /* single row of 5 dice — no wrapping */
 .ps-dicerow{display:flex;flex-wrap:nowrap;gap:5px;align-items:center;flex:1;min-width:0}
+/* Row above the dice: ALL on the left, HP/CP on the right */
+.ps-dice-toprow{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%}
+.ps-stats-inline{display:flex;align-items:center;gap:14px}
 .ps-all-btn{font-size:8px;font-weight:700;padding:3px 8px;border-radius:4px;border:1.5px solid var(--bdrhi);background:transparent;color:var(--txtd);cursor:pointer;white-space:nowrap;flex-shrink:0;transition:color .1s,border-color .1s}
 .ps-all-btn:hover{border-color:var(--teal);color:var(--teal)}
 /* Center area: tray + controls */
@@ -167,6 +170,12 @@ button{font-family:inherit;cursor:pointer}
 .disc-inner.snap-over{border-color:#C02828!important;background:#200808!important}
 .disc-lbl{font-size:6px;color:var(--txtd);font-weight:700;letter-spacing:.8px}
 .disc-n{font-size:13px;font-weight:700;color:var(--txtd)}
+/* Forge slot on the forge ability card */
+.forge-box{display:flex;align-items:center;justify-content:center;gap:5px;margin-top:4px;padding-top:4px;border-top:1px solid var(--bdr);flex-shrink:0;width:100%}
+.forge-count{font-size:15px;font-weight:700;color:var(--gold);line-height:1}
+.forge-lbl{font-size:6px;font-weight:700;letter-spacing:1px;color:var(--txtd)}
+.forge-open{font-size:8px;font-weight:700;padding:2px 7px;border-radius:4px;border:1.5px solid var(--bdrhi);background:transparent;color:var(--txtd);cursor:pointer;letter-spacing:.5px;transition:color .1s,border-color .1s}
+.forge-open:hover{border-color:var(--gold);color:var(--gold)}
 
 /* Nevermore overlay token */
 .nm-outer{display:flex;flex-direction:column;align-items:center;gap:2px}
@@ -177,8 +186,10 @@ button{font-family:inherit;cursor:pointer}
 #p1hand,#p2hand{position:absolute;left:0;right:var(--panel-w);height:var(--hand-h);overflow-x:auto;overflow-y:visible;display:flex;align-items:flex-start;gap:8px;padding:5px 12px 5px 6px;border-top:1px solid var(--bdr);background:#08101C;z-index:10}
 /* Label at the far left is hidden so cards slide fully left */
 #p1handlbl,#p2handlbl{display:none}
-/* Discard pile pinned to the right edge of the hand strip */
-.hand-disc{position:sticky;right:0;margin-left:auto;flex-shrink:0;align-self:center;background:#08101C;padding-left:8px;z-index:2}
+/* Draw button + discard pile pinned to the right edge of the hand strip */
+.hand-disc-col{position:sticky;right:0;margin-left:auto;flex-shrink:0;align-self:stretch;display:flex;flex-direction:column;align-items:center;gap:6px;background:#08101C;padding-left:8px;padding-top:2px;z-index:2}
+.hand-draw{padding:3px 12px;font-size:11px;flex-shrink:0}
+.hand-disc-col .disc-pile{margin-top:2px}
 #p1hand{bottom:0;border-top:1px solid var(--bdr)}
 #p2hand{top:46px;border-top:none;border-bottom:1px solid var(--bdr);align-items:flex-end}
 #p1hand.snap-over,#p2hand.snap-over{background:#0A1828;outline:1px solid var(--teal)}
@@ -259,9 +270,12 @@ button{font-family:inherit;cursor:pointer}
 <div id="p2hand">
   <span id="p2handlbl" style="font-size:8px;color:var(--txtd);font-weight:700;white-space:nowrap;margin-top:4px;flex-shrink:0">HAND (P2)</span>
   <div id="p2handcards" style="display:flex;gap:8px;align-items:flex-start"></div>
-  <div class="hand-disc disc-pile" id="p2disc-pile" onclick="viewDiscard('p2')" title="View discard pile">
-    <div class="disc-inner" id="p2disc-vis"><span class="disc-n" id="p2disc-n">0</span></div>
-    <span class="disc-lbl">DISCARD</span>
+  <div class="hand-disc-col">
+    <button class="btn hand-draw" id="p2draw" onclick="drawCard('p2')">Draw</button>
+    <div class="disc-pile" id="p2disc-pile" onclick="viewDiscard('p2')" title="View discard pile">
+      <div class="disc-inner" id="p2disc-vis"><span class="disc-n" id="p2disc-n">0</span></div>
+      <span class="disc-lbl">DISCARD</span>
+    </div>
   </div>
 </div>
 
@@ -282,9 +296,12 @@ button{font-family:inherit;cursor:pointer}
 <div id="p1hand">
   <span id="p1handlbl" style="font-size:8px;color:var(--txtd);font-weight:700;white-space:nowrap;margin-top:4px;flex-shrink:0">HAND (P1)</span>
   <div id="p1handcards" style="display:flex;gap:8px;align-items:flex-end"></div>
-  <div class="hand-disc disc-pile" id="p1disc-pile" onclick="viewDiscard('p1')" title="View discard pile">
-    <div class="disc-inner" id="p1disc-vis"><span class="disc-n" id="p1disc-n">0</span></div>
-    <span class="disc-lbl">DISCARD</span>
+  <div class="hand-disc-col">
+    <button class="btn hand-draw" id="p1draw" onclick="drawCard('p1')">Draw</button>
+    <div class="disc-pile" id="p1disc-pile" onclick="viewDiscard('p1')" title="View discard pile">
+      <div class="disc-inner" id="p1disc-vis"><span class="disc-n" id="p1disc-n">0</span></div>
+      <span class="disc-lbl">DISCARD</span>
+    </div>
   </div>
 </div>
 </div>
@@ -297,25 +314,26 @@ button{font-family:inherit;cursor:pointer}
       <div id="p2tokens" style="display:flex;gap:6px;align-items:center"></div>
       <div id="p2hex-spacer" style="width:0px;flex-shrink:0;transition:width .2s"></div>
     </div>
-    <div class="ps-stats-row">
-      <div class="sg"><span class="slbl">HP</span><div class="svr">
-        <button class="sbtn" onclick="adjStat('p2','hp',-1)">&#8722;</button>
-        <span class="sval" id="p2hp" style="color:var(--hp)" onclick="editStat(this,'p2','hp')">50</span>
-        <button class="sbtn" onclick="adjStat('p2','hp',1)">+</button>
-      </div></div>
-      <div class="sg"><span class="slbl">CP</span><div class="svr">
-        <button class="sbtn" onclick="adjStat('p2','cp',-1)">&#8722;</button>
-        <span class="sval" id="p2cp" style="color:var(--gold)" onclick="editStat(this,'p2','cp')">2</span>
-        <button class="sbtn" onclick="adjStat('p2','cp',1)">+</button>
-      </div></div>
-    </div>
     <div class="ps-dice-line">
       <div class="ps-dice-stack" style="display:flex;flex-direction:column-reverse;gap:3px;flex:1;min-width:0">
-        <button class="ps-all-btn" onclick="sendAllToTray('p2')" title="Send all dice to tray" style="align-self:flex-start">ALL</button>
+        <div class="ps-dice-toprow">
+          <button class="ps-all-btn" onclick="sendAllToTray('p2')" title="Send all dice to tray">ALL</button>
+          <div class="ps-stats-inline">
+            <div class="sg"><span class="slbl">HP</span><div class="svr">
+              <button class="sbtn" onclick="adjStat('p2','hp',-1)">&#8722;</button>
+              <span class="sval" id="p2hp" style="color:var(--hp)" onclick="editStat(this,'p2','hp')">50</span>
+              <button class="sbtn" onclick="adjStat('p2','hp',1)">+</button>
+            </div></div>
+            <div class="sg"><span class="slbl">CP</span><div class="svr">
+              <button class="sbtn" onclick="adjStat('p2','cp',-1)">&#8722;</button>
+              <span class="sval" id="p2cp" style="color:var(--gold)" onclick="editStat(this,'p2','cp')">2</span>
+              <button class="sbtn" onclick="adjStat('p2','cp',1)">+</button>
+            </div></div>
+          </div>
+        </div>
         <div class="ps-dicerow" id="p2dicerow-ps" data-player="p2"></div>
       </div>
       <div class="ps-dice-right">
-        <button class="btn" id="p2draw" onclick="drawCard('p2')">Draw</button>
         <button class="btn" id="p2leaflet-btn" style="display:none" onclick="openLeaflet('p2')">Leaflet</button>
       </div>
     </div>
@@ -339,25 +357,26 @@ button{font-family:inherit;cursor:pointer}
       <div id="p1tokens" style="display:flex;gap:6px;align-items:center"></div>
       <div id="p1hex-spacer" style="width:0px;flex-shrink:0;transition:width .2s"></div>
     </div>
-    <div class="ps-stats-row">
-      <div class="sg"><span class="slbl">HP</span><div class="svr">
-        <button class="sbtn" onclick="adjStat('p1','hp',-1)">&#8722;</button>
-        <span class="sval" id="p1hp" style="color:var(--hp)" onclick="editStat(this,'p1','hp')">50</span>
-        <button class="sbtn" onclick="adjStat('p1','hp',1)">+</button>
-      </div></div>
-      <div class="sg"><span class="slbl">CP</span><div class="svr">
-        <button class="sbtn" onclick="adjStat('p1','cp',-1)">&#8722;</button>
-        <span class="sval" id="p1cp" style="color:var(--gold)" onclick="editStat(this,'p1','cp')">2</span>
-        <button class="sbtn" onclick="adjStat('p1','cp',1)">+</button>
-      </div></div>
-    </div>
     <div class="ps-dice-line">
       <div class="ps-dice-stack" style="display:flex;flex-direction:column;gap:3px;flex:1;min-width:0">
-        <button class="ps-all-btn" onclick="sendAllToTray('p1')" title="Send all dice to tray" style="align-self:flex-start">ALL</button>
+        <div class="ps-dice-toprow">
+          <button class="ps-all-btn" onclick="sendAllToTray('p1')" title="Send all dice to tray">ALL</button>
+          <div class="ps-stats-inline">
+            <div class="sg"><span class="slbl">HP</span><div class="svr">
+              <button class="sbtn" onclick="adjStat('p1','hp',-1)">&#8722;</button>
+              <span class="sval" id="p1hp" style="color:var(--hp)" onclick="editStat(this,'p1','hp')">50</span>
+              <button class="sbtn" onclick="adjStat('p1','hp',1)">+</button>
+            </div></div>
+            <div class="sg"><span class="slbl">CP</span><div class="svr">
+              <button class="sbtn" onclick="adjStat('p1','cp',-1)">&#8722;</button>
+              <span class="sval" id="p1cp" style="color:var(--gold)" onclick="editStat(this,'p1','cp')">2</span>
+              <button class="sbtn" onclick="adjStat('p1','cp',1)">+</button>
+            </div></div>
+          </div>
+        </div>
         <div class="ps-dicerow" id="p1dicerow-ps" data-player="p1"></div>
       </div>
       <div class="ps-dice-right">
-        <button class="btn" id="p1draw" onclick="drawCard('p1')">Draw</button>
         <button class="btn" id="p1leaflet-btn" style="display:none" onclick="openLeaflet('p1')">Leaflet</button>
       </div>
     </div>
@@ -419,7 +438,7 @@ const CS={
 // ─── STATE ───────────────────────────────────────────────────────────────────
 function initP(){
   return{hp:50,cp:2,dice:Array(5).fill(0).map((_,i)=>({v:1,inTray:false,_i:i})),rolls:3,hasRolled:false,
-         deck:[],hand:[],discard:[],tokens:{},usedUpgrades:{}};
+         deck:[],hand:[],discard:[],forge:[],tokens:{},usedUpgrades:{}};
 }
 let S={view:"p1",turn:"p1",p1:initP(),p2:initP(),
        upgrades:{p1:{},p2:{}},chars:{p1:null,p2:null}};
@@ -567,15 +586,8 @@ function liftCardFromHand(player,cid,startX,startY){
 
 // ─── TOOLTIP ─────────────────────────────────────────────────────────────────
 function getSnapTarget(cid,player,mx,my){
-  // 1. Check the player's own hand strip
-  const hand=document.getElementById(player+"hand");
-  if(hand){
-    const hr=hand.getBoundingClientRect();
-    if(mx>=hr.left&&mx<=hr.right&&my>=hr.top&&my<=hr.bottom)
-      return{type:"hand",player};
-  }
-
-  // 2. Check own discard pile
+  // 1. Check own discard pile FIRST — it now lives inside the hand strip, so
+  //    the hand box would otherwise swallow the hit before we reach it.
   const disc=document.getElementById(player+"disc-vis");
   if(disc){
     const dr=disc.getBoundingClientRect();const pad=20;
@@ -583,8 +595,31 @@ function getSnapTarget(cid,player,mx,my){
       return{type:"discard",player};
   }
 
-  // 3. Check any ability cell (for upgrade drop detection)
+  // 2. Forge slot — an ability flagged as a card holder (Forgemaster's THE FORGE).
+  //    Only ORE cards may be placed there.
   const char=S.chars[player];
+  if(char){
+    const forgeAbil=char.abilities.find(a=>a.forgeSlot);
+    const cardDef=char.cards?char.cards.find(c=>c.id===cid):null;
+    if(forgeAbil&&cardDef&&cardDef.ore){
+      const cell=document.querySelector("#"+player+"grid .ac[data-abilid='"+forgeAbil.id+"']");
+      if(cell){
+        const cr=cell.getBoundingClientRect();
+        if(mx>=cr.left&&mx<=cr.right&&my>=cr.top&&my<=cr.bottom)
+          return{type:"forge",player,abilId:forgeAbil.id,cell};
+      }
+    }
+  }
+
+  // 3. Check the player's own hand strip
+  const hand=document.getElementById(player+"hand");
+  if(hand){
+    const hr=hand.getBoundingClientRect();
+    if(mx>=hr.left&&mx<=hr.right&&my>=hr.top&&my<=hr.bottom)
+      return{type:"hand",player};
+  }
+
+  // 4. Check any ability cell (for upgrade drop detection)
   const cardUpgrades=char?char.cardUpgrades:{};
   const upgAbilId=cardUpgrades[cid];
   if(upgAbilId){
@@ -612,6 +647,9 @@ function applySnapHighlight(snap){
   clearSnapHighlights();
   if(!snap)return;
   if(snap.type==="upgrade"&&snap.cell){
+    snap.cell.classList.add("snap-target","drop-ok");
+  }
+  if(snap.type==="forge"&&snap.cell){
     snap.cell.classList.add("snap-target","drop-ok");
   }
   if(snap.type==="discard"){
@@ -646,6 +684,13 @@ function commitCardDrop(id){
     applyUpgrade(player,cid,snap.abilId);
     co.el.classList.remove("dg");
     co.el.style.display="none"; // hidden but kept in CARD_OV so pullUpgradeCard can retrieve it
+
+  } else if(snap&&snap.type==="forge"){
+    // Ore goes onto the forge: remove the physical card, bump the forge count
+    co.el.remove();delete CARD_OV[id];
+    if(!S[player].forge)S[player].forge=[];
+    S[player].forge.push(cid);
+    updateForgeDisplay(player);
 
   } else {
     // Stay on board at full size
@@ -806,6 +851,14 @@ function buildAbilCard(a,ab,upgraded,char,col,row,rowSpan){
   const pullBtn=upgraded
     ?`<button class="pull-btn" title="Pull card back" onclick="event.stopPropagation();pullUpgradeCard('${char._player}','${a.id}')">↩</button>`
     :"";
+  // Forge slot: show an ore counter and an OPEN button to view/retrieve ores
+  const forgeHTML=ab.forgeSlot
+    ?`<div class="forge-box">
+        <span class="forge-count" id="${char._player}forge-n">0</span>
+        <span class="forge-lbl">ORE ON FORGE</span>
+        <button class="forge-open" onclick="event.stopPropagation();viewForge('${char._player}')">OPEN</button>
+      </div>`
+    :"";
   // Keep the name + badge on ONE line (no wrap) so the badge stays to the right;
   // the name font auto-shrinks later if it risks touching the card edges.
   return`<div class="${cls}" style="border-top-color:${ab.c};${placement}" data-abilid="${a.id}" data-player="${char._player}">
@@ -814,6 +867,7 @@ function buildAbilCard(a,ab,upgraded,char,col,row,rowSpan){
     </div>
     ${reqHTML?`<div class="areq">${reqHTML}</div>`:""}
     <div class="af">${renderFxHTML(ab.fx,char)}</div>
+    ${forgeHTML}
   </div>`;
 }
 
@@ -887,6 +941,7 @@ function buildGrid(containerId,player){
   });
 
   el.innerHTML=html;
+  if(typeof updateForgeDisplay==="function")updateForgeDisplay(player);
 }
 function buildGrids(){buildGrid("p1grid","p1");buildGrid("p2grid","p2");autoSizeAbilCards();}
 function buildEmptyGrid(containerId,player){
@@ -1418,22 +1473,30 @@ function editStat(el,p,stat){
 }
 // rollDice / resetDice / toggleLock removed — replaced by rollTray / resetTray / die drag
 function drawCard(p){if(NET.on&&p!==NET.me)return;const P=S[p];if(!P.deck.length||!S.chars[p])return;P.hand.push(P.deck.shift());updateDrawBtn(p);const inf=document.getElementById(p+"info");if(inf)inf.textContent="Hand:"+P.hand.length;renderHands();netSendCards(p);}
-// ─── DISCARD PANEL ────────────────────────────────────────────────────────────
+// ─── CARD PILE VIEWER (discard + forge) ───────────────────────────────────────
+// One panel serves both piles. `source` is "discard" or "forge"; the pile
+// contents live at S[player][source].
 let discardPanelPlayer=null;
+let discardPanelSource="discard";
 
-function viewDiscard(p){
+function viewDiscard(p){openPileViewer(p,"discard");}
+function viewForge(p){openPileViewer(p,"forge");}
+
+function openPileViewer(p,source){
   const P=S[p],char=S.chars[p];
   if(!char)return;
-  discardPanelPlayer=p;
+  const pile=P[source]||[];
+  discardPanelPlayer=p;discardPanelSource=source;
   const panel=document.getElementById("discard-panel");
   const title=document.getElementById("discard-box-title");
   const cards=document.getElementById("discard-cards");
-  title.textContent=p.toUpperCase()+" DISCARD ("+P.discard.length+")";
+  const label=source==="forge"?"FORGE":"DISCARD";
+  title.textContent=p.toUpperCase()+" "+label+" ("+pile.length+")";
   cards.innerHTML="";
-  if(!P.discard.length){
-    cards.innerHTML='<span style="font-size:9px;color:var(--txtd);font-style:italic">Discard pile is empty.</span>';
+  if(!pile.length){
+    cards.innerHTML='<span style="font-size:9px;color:var(--txtd);font-style:italic">'+(source==="forge"?"No ore on the forge.":"Discard pile is empty.")+'</span>';
   } else {
-    P.discard.forEach(cid=>{
+    pile.forEach(cid=>{
       const c=char.cards.find(x=>x.id===cid);if(!c)return;
       const st=CS[c.t];
       const card=document.createElement("div");
@@ -1444,7 +1507,7 @@ function viewDiscard(p){
       card.addEventListener("mousedown",e=>{
         if(e.button!==0)return;
         e.preventDefault();e.stopPropagation();
-        liftCardFromDiscard(p,cid,e.clientX,e.clientY);
+        liftCardFromPile(p,cid,source,e.clientX,e.clientY);
       });
       cards.appendChild(card);
     });
@@ -1457,14 +1520,16 @@ function closeDiscardPanel(){
   discardPanelPlayer=null;
 }
 
-// Lift a card out of the discard pile onto the overlay for dragging
-function liftCardFromDiscard(player,cid,mx,my){
-  if(NET.on&&player!==NET.me)return; // you can look at their discard, not touch it
+// Lift a card out of a pile (discard or forge) onto the overlay for dragging
+function liftCardFromPile(player,cid,source,mx,my){
+  if(NET.on&&player!==NET.me)return; // you can look at their piles, not touch them
   const char=S.chars[player];const c=char?char.cards.find(x=>x.id===cid):null;if(!c)return;
-  // Remove from discard state
-  S[player].discard=S[player].discard.filter(x=>x!==cid);
-  updateDiscardDisplay(player);
-  // Close panel and refresh it if still open (so removed card disappears)
+  // Remove one copy from the pile
+  const pile=S[player][source]||[];
+  const idx=pile.indexOf(cid);
+  if(idx>=0)pile.splice(idx,1);
+  if(source==="forge")updateForgeDisplay(player);
+  else updateDiscardDisplay(player);
   closeDiscardPanel();
   const st=CS[c.t];
   const id="cov_"+player+"_"+cid.replace(/[^a-z0-9]/gi,"_");
@@ -1481,6 +1546,7 @@ function liftCardFromDiscard(player,cid,mx,my){
   cardDrag.ox=mx;cardDrag.oy=my;
   cardDrag.bx=startX;cardDrag.by=startY;
   el.classList.add("dg");
+  netSendCards(player);
   el.addEventListener("mousedown",e=>{
     if(e.button!==0)return;
     if(NET.on&&player!==NET.me)return;
@@ -1492,7 +1558,14 @@ function liftCardFromDiscard(player,cid,mx,my){
   });
 }
 
-// Close discard panel when clicking the backdrop
+// Update the ore-count badge on the forge ability card
+function updateForgeDisplay(player){
+  const n=(S[player].forge||[]).length;
+  const el=document.getElementById(player+"forge-n");
+  if(el)el.textContent=n;
+}
+
+// Close pile viewer when clicking the backdrop
 document.getElementById("discard-panel").addEventListener("mousedown",e=>{
   if(e.target===document.getElementById("discard-panel"))closeDiscardPanel();
 });
@@ -1797,7 +1870,7 @@ function netSendCards(p){
   if(p!==NET.me)return;
   const upg={};Object.keys(S.upgrades[p]).forEach(a=>{upg[a]=S.upgrades[p][a]._cardId;});
   netSend({t:"cards",p:p,hand:S[p].hand.length,deck:S[p].deck.length,
-    discard:S[p].discard,upg:upg,board:netBoardList(p)});
+    discard:S[p].discard,forge:S[p].forge||[],upg:upg,board:netBoardList(p)});
   netSaveLocal();
 }
 function netSendChar(p){if(p!==NET.me)return;const c=S.chars[p];if(c)netSend({t:"char",p:p,c:c.id});}
@@ -1815,7 +1888,7 @@ function netSaveLocal(){
   const upg={};Object.keys(S.upgrades[me]).forEach(a=>{upg[a]=S.upgrades[me][a]._cardId;});
   const data={charId:S.chars[me]?S.chars[me].id:null,hp:P.hp,cp:P.cp,hasRolled:!!P.hasRolled,
     dice:P.dice.map(d=>({v:d.v,inTray:!!d.inTray,tx:d.tx,ty:d.ty,angle:d.angle||0})),
-    tokens:P.tokens,hand:P.hand,deck:P.deck,discard:P.discard,upg:upg,board:netBoardList(me)};
+    tokens:P.tokens,hand:P.hand,deck:P.deck,discard:P.discard,forge:P.forge||[],upg:upg,board:netBoardList(me)};
   try{localStorage.setItem("dt_save_"+NET.room+"_"+me,JSON.stringify(data));}catch(e){}
 }
 function netRestoreLocal(){
@@ -1835,11 +1908,12 @@ function applyLocalSave(d){
   d.dice.forEach((nd,i)=>{const od=P.dice[i];if(!od)return;od.v=nd.v;od.inTray=nd.inTray;od.tx=nd.tx;od.ty=nd.ty;od.angle=nd.angle;});
   if(d.tokens)P.tokens=d.tokens;
   P.hand=(d.hand||[]).slice();P.deck=(d.deck||[]).slice();P.discard=(d.discard||[]).slice();
+  P.forge=(d.forge||[]).slice();
   S.upgrades[me]={};
   Object.keys(d.upg||{}).forEach(a=>{if(char.upgrades[a])S.upgrades[me][a]={...char.upgrades[a],_cardId:d.upg[a]};});
   (d.board||[]).forEach(b=>makeBoardCard(me,b.cid,b.id,Math.round(b.rx*window.innerWidth),Math.round(b.ry*window.innerHeight),true));
   buildGrid(me+"grid",me);autoSizeAbilCards();
-  renderDice(me);renderTokens(me);renderHands();updateDrawBtn(me);updateDiscardDisplay(me);updateAvailableAbils(me);
+  renderDice(me);renderTokens(me);renderHands();updateDrawBtn(me);updateDiscardDisplay(me);updateForgeDisplay(me);updateAvailableAbils(me);
   const info=document.getElementById(me+"info");if(info)info.textContent="Hand:"+P.hand.length;
   netSendAll();
 }
@@ -1900,6 +1974,7 @@ function applyRemoteCards(d){
   const p=d.p,char=S.chars[p];if(!char)return;
   S[p].handCount=d.hand;S[p].deckCount=d.deck;
   S[p].discard=(d.discard||[]).slice();updateDiscardDisplay(p);
+  S[p].forge=(d.forge||[]).slice();updateForgeDisplay(p);
   // Upgrades: add what's new, remove what's gone
   const want=d.upg||{};
   let gridDirty=false;
