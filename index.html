@@ -235,9 +235,24 @@ button{font-family:inherit;cursor:pointer}
 #discard-box{background:#0C1828;border:1.5px solid var(--bdrhi);border-radius:12px;padding:14px 16px;min-width:320px;max-width:80vw;max-height:80vh;display:flex;flex-direction:column;gap:10px;box-shadow:0 8px 40px #000000CC}
 #discard-box-hdr{display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
 #discard-box-title{font-size:10px;font-weight:700;letter-spacing:2px;color:var(--txtd)}
-#discard-box-close{background:transparent;border:1px solid var(--bdrhi);color:var(--txtd);border-radius:4px;font-size:11px;padding:2px 8px;cursor:pointer}
-#discard-box-close:hover{border-color:var(--teal);color:var(--teal)}
+.panel-close-btn{background:transparent;border:1px solid var(--bdrhi);color:var(--txtd);border-radius:4px;font-size:11px;padding:2px 8px;cursor:pointer}
+.panel-close-btn:hover{border-color:var(--teal);color:var(--teal)}
 #discard-cards{display:flex;flex-wrap:wrap;gap:8px;overflow-y:auto;padding-bottom:4px}
+
+/* ── Mine / Search panels (Forgemaster) ── */
+#mine-panel,#search-panel{display:none;position:fixed;inset:0;z-index:600;background:#000000AA;align-items:center;justify-content:center}
+#mine-panel.open,#search-panel.open{display:flex}
+#mine-box,#search-box{background:#0C1828;border:1.5px solid var(--bdrhi);border-radius:12px;padding:14px 16px;min-width:320px;max-width:80vw;max-height:80vh;display:flex;flex-direction:column;gap:10px;box-shadow:0 8px 40px #000000CC}
+.mine-hdr{display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.mine-title{font-size:10px;font-weight:700;letter-spacing:2px;color:var(--txtd)}
+.mine-sub{font-size:9px;color:var(--txtd);margin-top:-4px}
+.mine-cards{display:flex;flex-wrap:wrap;gap:8px;overflow-y:auto;padding-bottom:4px;justify-content:center}
+.mine-card{width:116px;height:100px;flex-shrink:0;border-radius:8px;border:1.5px solid;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;position:relative;padding:6px}
+.mine-card.pickable{cursor:pointer;transition:filter .12s,transform .12s}
+.mine-card.pickable:hover{filter:brightness(1.3);transform:translateY(-2px)}
+.mine-card.unpickable{opacity:.4;cursor:not-allowed}
+.mine-foot{display:flex;gap:8px;justify-content:flex-end;flex-shrink:0}
+
 
 /* ── Multiplayer ── */
 #net-panel{display:none;position:fixed;inset:0;z-index:800;background:#000000AA;align-items:center;justify-content:center}
@@ -279,6 +294,7 @@ button{font-family:inherit;cursor:pointer}
   <div id="p2handcards" style="display:flex;gap:8px;align-items:flex-start"></div>
   <div class="hand-disc-col">
     <button class="btn hand-draw" id="p2draw" onclick="drawCard('p2')">Draw</button>
+    <button class="btn hand-draw" id="p2mine" style="display:none" onclick="openMinePanel('p2')">Mine</button>
   </div>
 </div>
 
@@ -301,6 +317,7 @@ button{font-family:inherit;cursor:pointer}
   <div id="p1handcards" style="display:flex;gap:8px;align-items:flex-end"></div>
   <div class="hand-disc-col">
     <button class="btn hand-draw" id="p1draw" onclick="drawCard('p1')">Draw</button>
+    <button class="btn hand-draw" id="p1mine" style="display:none" onclick="openMinePanel('p1')">Mine</button>
   </div>
 </div>
 </div>
@@ -416,9 +433,39 @@ button{font-family:inherit;cursor:pointer}
   <div id="discard-box">
     <div id="discard-box-hdr">
       <span id="discard-box-title">DISCARD PILE</span>
-      <button id="discard-box-close" onclick="closeDiscardPanel()">✕ Close</button>
+      <button class="panel-close-btn" onclick="closeDiscardPanel()">✕ Close</button>
     </div>
     <div id="discard-cards"></div>
+  </div>
+</div>
+
+<!-- Forgemaster: Mine — peek top 3 of deck, take any ORE, rest go to bottom -->
+<div id="mine-panel">
+  <div id="mine-box">
+    <div class="mine-hdr">
+      <span class="mine-title">MINE — TOP 3 CARDS</span>
+      <button class="panel-close-btn" onclick="closeMinePanel()">✕ Close</button>
+    </div>
+    <span class="mine-sub">Click an ORE card to place it on the dice tray. Remaining cards go to the bottom of the deck.</span>
+    <div class="mine-cards" id="mine-cards"></div>
+    <div class="mine-foot">
+      <button class="btn" onclick="revealNoneMine()">Reveal None</button>
+    </div>
+  </div>
+</div>
+
+<!-- Forgemaster: Search — look through entire deck, take any ORE, then shuffle -->
+<div id="search-panel">
+  <div id="search-box">
+    <div class="mine-hdr">
+      <span class="mine-title">SEARCH DECK</span>
+      <button class="panel-close-btn" onclick="closeSearchPanel()">✕ Close</button>
+    </div>
+    <span class="mine-sub">Click an ORE card to place it on the dice tray. The deck is shuffled afterward.</span>
+    <div class="mine-cards" id="search-cards"></div>
+    <div class="mine-foot">
+      <button class="btn" onclick="revealNoneSearch()">Reveal None</button>
+    </div>
   </div>
 </div>
 
@@ -903,6 +950,12 @@ function buildAbilCard(a,ab,upgraded,char,col,row,rowSpan){
         <button class="forge-open" onclick="event.stopPropagation();viewForge('${char._player}')">OPEN</button>
       </div>`
     :"";
+  // Search slot: button to look through the whole deck for one ORE
+  const searchHTML=ab.searchSlot
+    ?`<div class="forge-box">
+        <button class="forge-open" onclick="event.stopPropagation();openSearchPanel('${char._player}')">SEARCH</button>
+      </div>`
+    :"";
   // Keep the name + badge on ONE line (no wrap) so the badge stays to the right;
   // the name font auto-shrinks later if it risks touching the card edges.
   return`<div class="${cls}" style="border-top-color:${ab.c};${placement}" data-abilid="${a.id}" data-player="${char._player}">
@@ -912,6 +965,7 @@ function buildAbilCard(a,ab,upgraded,char,col,row,rowSpan){
     ${reqHTML?`<div class="areq">${reqHTML}</div>`:""}
     <div class="af">${renderFxHTML(ab.fx,char)}</div>
     ${forgeHTML}
+    ${searchHTML}
   </div>`;
 }
 
@@ -1492,12 +1546,18 @@ function updateDiscardDisplay(player){
 }
 function updateDrawBtn(player){
   const P=S[player],char=S.chars[player],btn=document.getElementById(player+"draw");
+  const mineBtn=document.getElementById(player+"mine");
   if(NET.on&&player!==NET.me){
     btn.style.display="none"; // opponent's deck is theirs to draw from — hide the button
+    if(mineBtn)mineBtn.style.display="none";
     return;
   }
   btn.style.display="";
   btn.textContent="Draw ("+P.deck.length+")";btn.disabled=!char||!P.deck.length;
+  if(mineBtn){
+    mineBtn.style.display=(char&&char.hasMine)?"":"none";
+    mineBtn.disabled=!char||!P.deck.length;
+  }
 }
 
 // ─── HAND ────────────────────────────────────────────────────────────────────
@@ -1650,6 +1710,126 @@ function updateForgeDisplay(player){
   const el=document.getElementById(player+"forge-n");
   if(el)el.textContent=n;
 }
+
+// ─── MINE / SEARCH (Forgemaster) ──────────────────────────────────────────────
+// Both panels peek at deck cards client-side only — nothing here is ever sent
+// over the network, so an opponent never sees what was looked at or passed on.
+// Clicking an ORE places a real board card on the shared dice tray (that part
+// DOES sync, via the normal card-overlay/board-list network path) which either
+// player can then drag off wherever they like.
+let mineState=null;   // {player, ids:[cid,...]}
+let searchState=null; // {player, ids:[cid,...]}
+
+// Compute a drop position centered-ish on the shared tray, with slight jitter
+// so multiple placed cards don't stack exactly on top of one another.
+function trayDropPos(){
+  const tray=document.getElementById("shared-tray");
+  const r=tray.getBoundingClientRect();
+  const jx=Math.floor(Math.random()*40)-20,jy=Math.floor(Math.random()*40)-20;
+  return{x:Math.round(r.left+r.width/2-58+jx),y:Math.round(r.top+r.height/2-40+jy)};
+}
+
+// Build one clickable/disabled card tile for a Mine/Search grid
+function buildOreTile(player,cid,onPick){
+  const char=S.chars[player];const c=char?char.cards.find(x=>x.id===cid):null;
+  if(!c)return document.createElement("div");
+  const st=cardStyle(c);
+  const pickable=!!c.ore;
+  const tile=document.createElement("div");
+  tile.className="mine-card "+(pickable?"pickable":"unpickable");
+  tile.style.cssText=`background:${st.bg};border-color:${st.bdr}`;
+  tile.innerHTML=`<span class="hcn" style="color:${st.lbl};font-size:11px">${splitCardName(c.n)}</span><span class="hcart" style="font-size:20px">${c.e||"🃏"}</span>`;
+  if(pickable)tile.addEventListener("click",()=>onPick(cid));
+  return tile;
+}
+
+// ── Mine: peek top 3, pick any ORE (rest go to the bottom of the deck) ───────
+function openMinePanel(player){
+  if(NET.on&&player!==NET.me)return;
+  const P=S[player],char=S.chars[player];
+  if(!char||!P.deck.length)return;
+  const ids=P.deck.slice(0,3);
+  mineState={player,ids};
+  const grid=document.getElementById("mine-cards");
+  grid.innerHTML="";
+  ids.forEach(cid=>grid.appendChild(buildOreTile(player,cid,pickedCid=>pickFromMine(pickedCid))));
+  document.getElementById("mine-panel").classList.add("open");
+}
+function pickFromMine(cid){
+  if(!mineState)return;
+  const{player,ids}=mineState;
+  const P=S[player];
+  // Pull the picked ore out of the top-3 peek; the rest go to the bottom of the deck
+  const rest=ids.filter(id=>id!==cid);
+  // Remove exactly the peeked 3 cards from the top of the real deck
+  P.deck.splice(0,ids.length);
+  P.deck.push(...rest);
+  const pos=trayDropPos();
+  const ovId="cov_"+player+"_"+cid+"_"+Date.now();
+  makeBoardCard(player,cid,ovId,pos.x,pos.y,true);
+  netSendCards(player);
+  closeMinePanel();
+  updateDrawBtn(player);
+}
+function revealNoneMine(){
+  if(!mineState)return;
+  const{player,ids}=mineState;
+  const P=S[player];
+  P.deck.splice(0,ids.length);
+  P.deck.push(...ids);
+  netSendCards(player);
+  closeMinePanel();
+  updateDrawBtn(player);
+}
+function closeMinePanel(){
+  document.getElementById("mine-panel").classList.remove("open");
+  mineState=null;
+}
+document.getElementById("mine-panel").addEventListener("mousedown",e=>{
+  if(e.target===document.getElementById("mine-panel"))revealNoneMine();
+});
+
+// ── Search: look through the whole deck, pick any ORE, then shuffle ─────────
+function openSearchPanel(player){
+  if(NET.on&&player!==NET.me)return;
+  const P=S[player],char=S.chars[player];
+  if(!char||!P.deck.length)return;
+  const ids=P.deck.slice();
+  searchState={player,ids};
+  const grid=document.getElementById("search-cards");
+  grid.innerHTML="";
+  ids.forEach(cid=>grid.appendChild(buildOreTile(player,cid,pickedCid=>pickFromSearch(pickedCid))));
+  document.getElementById("search-panel").classList.add("open");
+}
+function shuffleArr(a){const b=[...a];for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]];}return b;}
+function pickFromSearch(cid){
+  if(!searchState)return;
+  const{player,ids}=searchState;
+  const P=S[player];
+  const rest=ids.filter(id=>id!==cid);
+  P.deck=shuffleArr(rest);
+  const pos=trayDropPos();
+  const ovId="cov_"+player+"_"+cid+"_"+Date.now();
+  makeBoardCard(player,cid,ovId,pos.x,pos.y,true);
+  netSendCards(player);
+  closeSearchPanel();
+  updateDrawBtn(player);
+}
+function revealNoneSearch(){
+  if(!searchState)return;
+  const{player,ids}=searchState;
+  S[player].deck=shuffleArr(ids);
+  netSendCards(player);
+  closeSearchPanel();
+  updateDrawBtn(player);
+}
+function closeSearchPanel(){
+  document.getElementById("search-panel").classList.remove("open");
+  searchState=null;
+}
+document.getElementById("search-panel").addEventListener("mousedown",e=>{
+  if(e.target===document.getElementById("search-panel"))revealNoneSearch();
+});
 
 // Close pile viewer when clicking the backdrop
 document.getElementById("discard-panel").addEventListener("mousedown",e=>{
