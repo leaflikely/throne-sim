@@ -411,7 +411,10 @@ let S={view:"p1",turn:"p1",p1:initP(),p2:initP(),
        upgrades:{p1:{},p2:{}},chars:{p1:null,p2:null}};
 
 // ─── CHARACTER LOADING ───────────────────────────────────────────────────────
-const CHAR_ROSTER=[{id:"raveness",name:"Raveness",file:"raveness.js"}];
+const CHAR_ROSTER=[
+  {id:"raveness",name:"Raveness",file:"raveness.js"},
+  {id:"forgemaster",name:"Forgemaster",file:"forgemaster.js"},
+];
 
 function loadCharacter(player,charId){
   const entry=CHAR_ROSTER.find(c=>c.id===charId);if(!entry)return;
@@ -754,16 +757,18 @@ function buildReqHTML(reqDef,char){
 }
 function renderFxHTML(fx,char){
   if(!char)return fx.replace(/\n/g,"<br>");
-  const tIdx=char.faces.findIndex((f,i)=>i>0&&f.t==="TALON");
-  const fIdx=char.faces.findIndex((f,i)=>i>0&&f.t==="FEATHER");
-  const eIdx=char.faces.findIndex((f,i)=>i>0&&f.t==="EYE");
   const ico=(idx)=>`<span class="die-ico">${char.dieIcon(idx,false,11)}</span>`;
   const blk=(n)=>`<span class="dmg-blk">${n}</span>`;
   const udf=(n)=>`<span class="dmg-udf">${n}</span>`;
-  return fx
-    .replace(/\{T\}/g,ico(tIdx))
-    .replace(/\{F\}/g,ico(fIdx))
-    .replace(/\{E\}/g,ico(eIdx))
+  let out=fx;
+  // Replace {X} with the die icon whose face type starts with letter X
+  // (e.g. {T}=TALON, {P}=PICKAXE) — works for any character's face set
+  const seen={};
+  char.faces.forEach((f,i)=>{
+    if(!f||seen[f.t])return;seen[f.t]=true;
+    out=out.replace(new RegExp("\\{"+f.t[0]+"\\}","g"),ico(i));
+  });
+  return out
     .replace(/(\d+) Blockable/g,(_,n)=>blk(n))
     .replace(/(\d+) Undefendable/g,(_,n)=>udf(n))
     .replace(/\n/g,"<br>");
@@ -774,6 +779,8 @@ function buildAbilCard(a,ab,upgraded,char,col,row,rowSpan){
     ?`<span class="abadge" style="background:#1E683022;color:#1E6830;margin-left:5px">DEF</span>`
     :isUlt
     ?`<span class="abadge" style="background:#90680822;color:#906808;margin-left:5px">ULTIMATE</span>`
+    :ab.passive
+    ?`<span class="abadge" style="background:#4A5A7022;color:#6A7A9A;margin-left:5px">PASSIVE</span>`
     :"";
   const span=rowSpan>1?`grid-row:${row}/span ${rowSpan};`:"";
   const placement=`grid-column:${col};grid-row:${row};${span}`;
@@ -1214,7 +1221,8 @@ function updateAvailableAbils(player){
   if(!char||!P.hasRolled)return;
 
   // Count how many of each face type are showing across all dice
-  const counts={talon:0,feather:0,eye:0};
+  // (built from the character's own face list, so it works for any character)
+  const counts={};
   P.dice.forEach(d=>{
     const f=char.faces[d.v];
     if(f)counts[f.t.toLowerCase()]=(counts[f.t.toLowerCase()]||0)+1;
@@ -1245,18 +1253,10 @@ function updateAvailableAbils(player){
 
     // Defense never auto-qualifies (it uses its own roll phase)
     if(ab.t==="def")return;
+    // Passive abilities are always-on rules, never dice-triggered
+    if(ab.passive)return;
 
-    // Ultimate: requires all 5 dice showing the eye face (value 6 for Raveness)
-    if(ab.t==="ult"){
-      const allEyes=P.dice.every(d=>{const f=char.faces[d.v];return f&&f.t==="EYE";});
-      if(allEyes){
-        cell.classList.add("available");
-        cell.style.setProperty("--avail-color",ab.c+"40");
-      }
-      return;
-    }
-
-    const qualified=ab.req.every(r=>{
+    const checkReq=(req)=>req.every(r=>{
       if(r.type==="text"){
         const lbl=(r.label||"").toLowerCase();
         if(lbl.includes("small straight"))return straight4;
@@ -1265,6 +1265,22 @@ function updateAvailableAbils(player){
       }
       return (counts[r.type]||0)>=r.count;
     });
+
+    // Ultimate: use its own dice requirement if it defines one;
+    // otherwise fall back to the legacy "all 5 dice show the 6-face" rule
+    if(ab.t==="ult"){
+      let ok;
+      if(ab.req&&ab.req.length)ok=checkReq(ab.req);
+      else ok=P.dice.every(d=>{const f=char.faces[d.v];return f&&f.t===char.faces[6].t;});
+      if(ok){
+        cell.classList.add("available");
+        cell.style.setProperty("--avail-color",ab.c+"40");
+      }
+      return;
+    }
+
+    if(!ab.req||!ab.req.length)return;
+    const qualified=checkReq(ab.req);
 
     if(qualified){
       cell.classList.add("available");
