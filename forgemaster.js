@@ -47,7 +47,19 @@ const ABIL=[
    fx:"Deal 5 Blockable and roll 1 die:\nAdd dmg equal to the value rolled."},
   {id:"armored",n:"ARMORED UP",  c:"#7890B0",t:"off",
    req:[{type:"text",label:"Small Straight"}],hideReq:true,
-   fx:"If you have 2 Armor, add 2 dmg.\nSmall Straight: 7 Blockable\nLarge Straight: 10 Blockable"},
+   fx:"If you have 2 Armor, add 2 dmg.\nSmall Straight: 7 Blockable\nLarge Straight: 10 Blockable",
+   // Live coloring: armor line green when helm+shield both set (else red);
+   // each straight label greens when the dice qualify for it.
+   dynamicFx:function(ctx){
+     const tk=ctx.tokens||{};
+     const hasBoth=!!tk.helmet&&!!tk.shield;
+     const armorColor=hasBoth?"#28A050":"#C02828";
+     const smallCol=ctx.straight4?"#28A050":"#7890B0";
+     const largeCol=ctx.straight5?"#28A050":"#7890B0";
+     return `<span style="color:${armorColor};font-weight:700">If you have 2 Armor,</span> add 2 dmg.\n`
+           +`<span style="color:${smallCol};font-weight:700">Small Straight</span>: 7 Blockable\n`
+           +`<span style="color:${largeCol};font-weight:700">Large Straight</span>: 10 Blockable`;
+   }},
   {id:"haul",   n:"A GOOD HAUL", c:"#28A050",t:"off",
    req:[{type:"pickaxe",count:1},{type:"hammer",count:1},{type:"anvil",count:2}],
    fx:"Mine your deck.\nYou may reveal all ORE mined this way and place them on THE FORGE.\n8 Blockable"},
@@ -72,17 +84,20 @@ const CARD_UPGRADES={};
 // 9 Gold, 6 Diamond, 1 Ultimanium.
 const ORE_DEFS={
   gold:{n:"GOLD ORE",       t:"blue",e:"🟡",
+    color:{bg:"#241E05",bdr:"#8A6A10",lbl:"#E0C020",tag:"ORE"},
     x:"Scrap Effect:<br>Heal 1 or gain 1 CP.<br>Discard this card."},
   diamond:{n:"DIAMOND ORE", t:"blue",e:"💎",
+    color:{bg:"#052024",bdr:"#1A7080",lbl:"#40D0D8",tag:"ORE"},
     x:"Scrap Effect:<br>You may reroll 1 die or gain 1 CP.<br>Discard this card."},
   ultimanium:{n:"ULTIMANIUM ORE",t:"blue",e:"🔷",
+    color:{bg:"#18082A",bdr:"#5A2A9A",lbl:"#A060E0",tag:"ORE"},
     x:"Scrap Effect:<br>Change the value of one of your dice to 6 or draw 2.<br>Discard this card."},
 };
 const CARDS=[];
 (function(){
   const add=(kind,count)=>{
     const d=ORE_DEFS[kind];
-    for(let i=1;i<=count;i++)CARDS.push({id:kind+"_"+i,n:d.n,cp:0,t:d.t,e:d.e,x:d.x,ore:true});
+    for(let i=1;i<=count;i++)CARDS.push({id:kind+"_"+i,n:d.n,cp:0,noCP:true,ore:true,color:d.color,t:d.t,e:d.e,x:d.x});
   };
   add("gold",9);
   add("diamond",6);
@@ -191,11 +206,13 @@ window.DT_CHARACTERS["forgemaster"] = {
   cardUpgrades:        CARD_UPGRADES,
   cards:               CARDS,
   faces:               FACES,
+  // Keyword coloring in ability text. Longest phrases first so they win.
+  fxKeywords:          [["THE FORGE","#C04030"],["ORE","#9050D8"],["Mine","#E0C020"]],
   dieIcon:             dieIcon,
   renderTokens:        renderTokens,
   initTokenState:      initTokenState,
   hasHexTokens:        false,
-  leaflet:             "Forgemaster_insert.png",
+  leaflet:             ["Forgemaster_insert.png","Forgemaster_mining.png","Forgemaster_crafting.png"],
 };
 
 })();
