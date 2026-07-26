@@ -106,10 +106,10 @@ function initFormState() {
 
 // ─── FORM SWITCHER + SHAPESHIFT COUNTER ──────────────────────────────────────
 // Pinned to the top-left corner of this player's playspace (their board area).
-// Three buttons (Druid/Tiger/Bear form) — only one selected at a time, starts
+// Three buttons (Druid/Cat/Bear form) — only one selected at a time, starts
 // on Druid — plus a brown triangle counter (0-2) for the Shape Shift token.
-const FORM_LIST=["Druid","Tiger","Bear"];
-const FORM_COLORS={Druid:"#4890E0",Tiger:"#D8402C",Bear:"#D8C020"};
+const FORM_LIST=["Druid","Cat","Bear"];
+const FORM_COLORS={Druid:"#4890E0",Cat:"#D8402C",Bear:"#D8C020"};
 
 function renderFormWidget(player, formState, container) {
   container.innerHTML = "";
@@ -177,39 +177,76 @@ function dieIcon(faceValue, locked, size) {
   return I.leaf(c, size);
 }
 
-// ─── WOUND TOKENS (draggable overlay pieces) ─────────────────────────────────
+// ─── WOUND + REGEN TOKENS (draggable overlay pieces) ─────────────────────────
 // Two pink WOUND tokens per player, starting just to the right of that
-// player's Shape Shift counter (in the form widget). Draggable + net-synced
-// through the shared overlay system, same as Raveness's Hex tokens.
+// player's Shape Shift counter (in the form widget), with two dark-green REGEN
+// tokens directly underneath. Draggable + net-synced through the shared overlay
+// system, same as Raveness's Hex tokens. Regen tokens right-click to flip
+// between the "2" (dark green) and "1" (light green) sides.
 function buildOverlayTokens(player, addFn, removeFn) {
   // Deferred so the form widget has been laid out and has real coordinates.
-  setTimeout(() => placeWoundTokens(player), 80);
+  setTimeout(() => placeDruidTokens(player), 80);
 }
 
-function placeWoundTokens(player) {
+function placeDruidTokens(player) {
   const pLabel = player === "p1" ? "P1" : "P2";
   const pColor = player === "p1" ? "#00C4A0" : "#4890E0";
   const anchor = document.getElementById(player + "formwidget");
 
+  // Base position: just right of the Shape Shift counter.
+  let baseX = 420, baseY = window.innerHeight / 2;
+  if (anchor) {
+    const r = anchor.getBoundingClientRect();
+    baseX = r.right + 8;
+    baseY = r.top + r.height / 2 - 16;
+  }
+
+  // Row 1: Wound tokens
   for (let i = 0; i < 2; i++) {
     const id = "wound_" + player + "_" + i;
     if (document.getElementById(id)) continue;
-
-    // Default spawn, overridden to sit just right of the Shape Shift counter.
-    let x = 420 + i * 34, y = window.innerHeight / 2;
-    if (anchor) {
-      const r = anchor.getBoundingClientRect();
-      x = r.right + 8 + i * 34;
-      y = r.top + r.height / 2 - 16;
-    }
-
     const el = document.createElement("div");
     el.style.cssText = "display:flex;flex-direction:column;align-items:center;gap:1px";
     el.innerHTML =
       '<span style="font-size:6px;font-weight:700;letter-spacing:1px;color:#E060A0">WOUND</span>'
       + '<svg width="26" height="24" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" fill="#E060A033" stroke="#E060A0" stroke-width="2.2"/><path d="M8 8 L16 16 M16 8 L8 16" stroke="#E060A0" stroke-width="2.2" stroke-linecap="round"/></svg>'
       + '<span style="font-size:6px;color:' + pColor + ';font-weight:700;letter-spacing:1px">' + pLabel + '</span>';
-    window.addOverlayToken(id, el, x, y);
+    window.addOverlayToken(id, el, baseX + i * 34, baseY);
+  }
+
+  // Row 2: Regen tokens (underneath the wound row), flippable 2 <-> 1
+  for (let i = 0; i < 2; i++) {
+    const id = "regen_" + player + "_" + i;
+    if (document.getElementById(id)) continue;
+    const el = document.createElement("div");
+    el.style.cssText = "display:flex;flex-direction:column;align-items:center;gap:1px";
+    el.dataset.side = "2"; // "2" = dark-green front, "1" = light-green back
+
+    const draw = () => {
+      const dark = el.dataset.side === "2";
+      const ring = dark ? "#1E6830" : "#5FBF6A";
+      const fill = dark ? "#1E683055" : "#5FBF6A44";
+      const num  = dark ? "2" : "1";
+      el.innerHTML =
+        '<span style="font-size:6px;font-weight:700;letter-spacing:1px;color:#289048">REGEN</span>'
+        + '<svg width="26" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="' + fill + '" stroke="' + ring + '" stroke-width="2.2"/>'
+        + '<text x="12" y="16" text-anchor="middle" font-size="11" font-weight="700" fill="' + ring + '">' + num + '</text></svg>'
+        + '<span style="font-size:6px;color:' + pColor + ';font-weight:700;letter-spacing:1px">' + pLabel + '</span>';
+    };
+    draw();
+
+    // Right-click flips to the other side (and syncs to the opponent).
+    el._applyOvState = (side) => { el.dataset.side = side; draw(); };
+    el.addEventListener("contextmenu", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (window.netCanEdit && !window.netCanEdit(player)) return;
+      el.dataset.side = el.dataset.side === "2" ? "1" : "2";
+      draw();
+      if (window.netOvState) window.netOvState(id, el.dataset.side);
+    });
+
+    window.addOverlayToken(id, el, baseX + i * 34, baseY + 40);
   }
 }
 
