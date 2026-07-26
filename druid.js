@@ -12,6 +12,8 @@ const I={
   paw:(c,s)=>`<svg class="dico" width="${s}" height="${s}" viewBox="0 0 24 24" fill="none"><ellipse cx="12" cy="16" rx="6" ry="5" fill="${c}" fill-opacity="0.25" stroke="${c}" stroke-width="1.8"/><circle cx="6" cy="7.5" r="2.3" fill="${c}" fill-opacity="0.25" stroke="${c}" stroke-width="1.6"/><circle cx="12" cy="5.5" r="2.3" fill="${c}" fill-opacity="0.25" stroke="${c}" stroke-width="1.6"/><circle cx="18" cy="7.5" r="2.3" fill="${c}" fill-opacity="0.25" stroke="${c}" stroke-width="1.6"/></svg>`,
   // Nature: leaf shape
   leaf:(c,s)=>`<svg class="dico" width="${s}" height="${s}" viewBox="0 0 24 24" fill="none"><path d="M4 20 Q4 6 20 3 Q19 15 12 18 Q7 20 4 20Z" fill="${c}" fill-opacity="0.25" stroke="${c}" stroke-width="1.8" stroke-linejoin="round"/><path d="M5 19 Q11 12 19 4" stroke="${c}" stroke-width="1.3" opacity="0.6"/></svg>`,
+  // Wound: a claw-slash gash inside a filled circle
+  wound:(stroke,fill,s)=>`<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="${fill}" stroke="${stroke}" stroke-width="2"/><path d="M8 6 C10 11 10 13 9 18" stroke="${stroke}" stroke-width="2" stroke-linecap="round"/><path d="M12 5 C14 11 14 13 12.5 19" stroke="${stroke}" stroke-width="2" stroke-linecap="round"/><path d="M16 6 C18 11 18 13 17 18" stroke="${stroke}" stroke-width="2" stroke-linecap="round"/></svg>`,
 };
 
 // ─── DIE FACES ───────────────────────────────────────────────────────────────
@@ -175,6 +177,42 @@ function dieIcon(faceValue, locked, size) {
   return I.leaf(c, size);
 }
 
+// ─── WOUND TOKENS (draggable overlay pieces) ─────────────────────────────────
+// Two pink WOUND tokens per player, starting just to the right of that
+// player's Shape Shift counter (in the form widget). Draggable + net-synced
+// through the shared overlay system, same as Raveness's Hex tokens.
+function buildOverlayTokens(player, addFn, removeFn) {
+  // Deferred so the form widget has been laid out and has real coordinates.
+  setTimeout(() => placeWoundTokens(player), 80);
+}
+
+function placeWoundTokens(player) {
+  const pLabel = player === "p1" ? "P1" : "P2";
+  const pColor = player === "p1" ? "#00C4A0" : "#4890E0";
+  const anchor = document.getElementById(player + "formwidget");
+
+  for (let i = 0; i < 2; i++) {
+    const id = "wound_" + player + "_" + i;
+    if (document.getElementById(id)) continue;
+
+    // Default spawn, overridden to sit just right of the Shape Shift counter.
+    let x = 420 + i * 34, y = window.innerHeight / 2;
+    if (anchor) {
+      const r = anchor.getBoundingClientRect();
+      x = r.right + 8 + i * 34;
+      y = r.top + r.height / 2 - 16;
+    }
+
+    const el = document.createElement("div");
+    el.style.cssText = "display:flex;flex-direction:column;align-items:center;gap:1px";
+    el.innerHTML =
+      '<span style="font-size:6px;font-weight:700;letter-spacing:1px;color:#E060A0">WOUND</span>'
+      + '<svg width="26" height="24" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" fill="#E060A033" stroke="#E060A0" stroke-width="2.2"/><path d="M8 8 L16 16 M16 8 L8 16" stroke="#E060A0" stroke-width="2.2" stroke-linecap="round"/></svg>'
+      + '<span style="font-size:6px;color:' + pColor + ';font-weight:700;letter-spacing:1px">' + pLabel + '</span>';
+    window.addOverlayToken(id, el, x, y);
+  }
+}
+
 // ─── EXPORT ──────────────────────────────────────────────────────────────────
 window.DT_CHARACTERS = window.DT_CHARACTERS || {};
 window.DT_CHARACTERS["druid"] = {
@@ -193,6 +231,7 @@ window.DT_CHARACTERS["druid"] = {
   hasFormWidget:       true,
   renderFormWidget:    renderFormWidget,
   initFormState:       initFormState,
+  buildOverlayTokens:  buildOverlayTokens,
 };
 
 })();
