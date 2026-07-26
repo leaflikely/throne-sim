@@ -648,7 +648,7 @@ function applyCharacter(player,cd){
 const OV_TOKENS={};
 
 function rebuildOverlay(){
-  Object.keys(OV_TOKENS).forEach(id=>{if(id.startsWith("nm_")||id.startsWith("hex_"))removeOverlayToken(id);});
+  Object.keys(OV_TOKENS).forEach(id=>{if(id.startsWith("nm_")||id.startsWith("hex_")||id.startsWith("wound_")||id.startsWith("regen_"))removeOverlayToken(id);});
   ["p1","p2"].forEach(p=>{
     const cd=S.chars[p];
     if(cd&&cd.buildOverlayTokens)cd.buildOverlayTokens(p,addOverlayToken,removeOverlayToken);
@@ -670,6 +670,8 @@ function addOverlayToken(id,el,x,y){
 function removeOverlayToken(id){if(OV_TOKENS[id]){OV_TOKENS[id].el.remove();delete OV_TOKENS[id];}}
 window.addOverlayToken=addOverlayToken;
 window.removeOverlayToken=removeOverlayToken;
+// Broadcast a token's custom state (e.g. a flip side) to the opponent.
+window.netOvState=function(id,st){if(typeof netSend==="function")netSend({t:"ov",id:id,st:st});};
 
 // Nevermore dial — per player
 const NM_DIALS={p1:0,p2:0};
@@ -2661,8 +2663,9 @@ function netApply(d){
     case "ov":{
       const tk=OV_TOKENS[d.id];
       if(tk){
-        tk.x=Math.round(d.rx*window.innerWidth);tk.y=Math.round(d.ry*window.innerHeight);
-        tk.el.style.left=tk.x+"px";tk.el.style.top=tk.y+"px";
+        if(d.rx!==undefined){tk.x=Math.round(d.rx*window.innerWidth);tk.y=Math.round(d.ry*window.innerHeight);
+          tk.el.style.left=tk.x+"px";tk.el.style.top=tk.y+"px";}
+        if(d.st!==undefined&&typeof tk.el._applyOvState==="function")tk.el._applyOvState(d.st);
       }
       break;}
     case "nm":{
