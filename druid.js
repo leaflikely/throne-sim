@@ -49,9 +49,9 @@ const ABIL=[
   {id:"answer",  n:"FOREST'S ANSWER", c:"#1E6830",t:"off",
    req:[{type:"text",label:"Large Straight"}],
    fx:"Gain Shape Shift.\nDeal 7 Blockable and roll 1:\nOn {C}, +2 dmg.\nOn {P}, gain Shape Shift.\nOn {N}, gain Regenerate."},
-  {id:"protect", n:"PROTECT THE FOREST",c:"#1E6830",t:"off",pairWith:"wrath",searchSlot:true,
+  {id:"protect", n:"PROTECT THE FOREST",c:"#1E6830",t:"off",pairWith:"wrath",
    req:[{type:"nature",count:4}],
-   fx:"Gain Regenerate and Shape Shift.\n6 Undefendable"},
+   fx:"Gain Regenerate and Shape Shift.\n6 Undefendable."},
   {id:"hide",    n:"THICK HIDE",      c:"#1E6830",t:"def",defDice:2,
    req:[],
    fx:"1 Undefendable X {C}\nIf in Bear form, roll 4 dice instead and prevent 1X({P}+{N}) dmg."},
@@ -98,6 +98,73 @@ function initTokenState() {
   return {};
 }
 
+function initFormState() {
+  return { form: "Druid", shapeshift: 0 };
+}
+
+// ─── FORM SWITCHER + SHAPESHIFT COUNTER ──────────────────────────────────────
+// Pinned to the top-left corner of this player's playspace (their board area).
+// Three buttons (Druid/Tiger/Bear form) — only one selected at a time, starts
+// on Druid — plus a brown triangle counter (0-2) for the Shape Shift token.
+const FORM_LIST=["Druid","Tiger","Bear"];
+
+function renderFormWidget(player, formState, container) {
+  container.innerHTML = "";
+  if (!formState.form) formState.form = "Druid";
+  if (typeof formState.shapeshift !== "number") formState.shapeshift = 0;
+
+  const wrap = document.createElement("div");
+  wrap.style.cssText = "display:flex;align-items:center;gap:8px;pointer-events:auto";
+
+  // Form buttons
+  const btnRow = document.createElement("div");
+  btnRow.style.cssText = "display:flex;gap:4px";
+  FORM_LIST.forEach(form => {
+    const active = formState.form === form;
+    const btn = document.createElement("button");
+    btn.textContent = form.toUpperCase();
+    btn.style.cssText =
+      "font-size:8px;font-weight:700;letter-spacing:.5px;padding:4px 8px;border-radius:4px;cursor:pointer;white-space:nowrap;transition:color .1s,border-color .1s,background .1s;"
+      + (active
+          ? "border:1.5px solid #3A9C5C;color:#3A9C5C;background:#28904822;"
+          : "border:1.5px solid var(--bdrhi);background:transparent;color:var(--txtd);");
+    btn.addEventListener("click", () => {
+      if (window.netCanEdit && !window.netCanEdit(player)) return;
+      formState.form = form;
+      renderFormWidget(player, formState, container);
+      if (window.netTokens) window.netTokens(player);
+    });
+    btn.addEventListener("mouseenter", () => { if (formState.form !== form) btn.style.borderColor = "#3A9C5C"; });
+    btn.addEventListener("mouseleave", () => { if (formState.form !== form) btn.style.borderColor = "var(--bdrhi)"; });
+    btnRow.appendChild(btn);
+  });
+  wrap.appendChild(btnRow);
+
+  // Shapeshift counter: brown triangle, 0-2. Click to increment, right-click to decrement.
+  const triWrap = document.createElement("div");
+  triWrap.style.cssText = "position:relative;width:30px;height:28px;flex-shrink:0;cursor:pointer;user-select:none";
+  triWrap.title = "Shape Shift (click +, right-click −)";
+  triWrap.innerHTML =
+    '<svg width="30" height="28" viewBox="0 0 30 28"><polygon points="15,2 28,25 2,25" fill="#8C5A1E33" stroke="#8C5A1E" stroke-width="2"/></svg>'
+    + '<span style="position:absolute;left:0;right:0;bottom:3px;text-align:center;font-size:11px;font-weight:700;color:#C08A46">' + formState.shapeshift + '</span>';
+  triWrap.addEventListener("click", () => {
+    if (window.netCanEdit && !window.netCanEdit(player)) return;
+    formState.shapeshift = Math.min(2, formState.shapeshift + 1);
+    renderFormWidget(player, formState, container);
+    if (window.netTokens) window.netTokens(player);
+  });
+  triWrap.addEventListener("contextmenu", (e) => {
+    e.preventDefault();
+    if (window.netCanEdit && !window.netCanEdit(player)) return;
+    formState.shapeshift = Math.max(0, formState.shapeshift - 1);
+    renderFormWidget(player, formState, container);
+    if (window.netTokens) window.netTokens(player);
+  });
+  wrap.appendChild(triWrap);
+
+  container.appendChild(wrap);
+}
+
 function dieIcon(faceValue, locked, size) {
   const f = FACES[faceValue];
   const c = locked ? "#253045" : f.c;
@@ -121,6 +188,9 @@ window.DT_CHARACTERS["druid"] = {
   renderTokens:        renderTokens,
   initTokenState:      initTokenState,
   hasHexTokens:        false,
+  hasFormWidget:       true,
+  renderFormWidget:    renderFormWidget,
+  initFormState:       initFormState,
 };
 
 })();
