@@ -196,10 +196,16 @@ function buildOverlayTokens(player, addFn, removeFn) {
   const color = NM_COLORS[player];
   const pLabel = player === "p1" ? "P1" : "P2";
 
-  // Position: p1 → lower-center of screen, p2 → upper-center
+  // Position: p1 → lower play space, p2 → upper play space (mirrored),
+  // roughly a third of the way in from the panel's left edge. Computed
+  // relative to the right-hand play space panel (not the full window) so it
+  // lands in the same visual spot regardless of how wide that panel is set.
   const W = window.innerWidth, H = window.innerHeight;
-  const x = Math.round(W / 2 - 48);
-  const y = player === "p1" ? Math.round(H * 0.62) : Math.round(H * 0.08);
+  const panelEl = document.getElementById("right-panel");
+  const panelW = panelEl ? panelEl.getBoundingClientRect().width : Math.round(W*0.304);
+  const panelLeft = W - panelW;
+  const x = Math.round(panelLeft + panelW*0.305 - 32); // 32 = half the 64px circle
+  const y = player === "p1" ? Math.round(H * 0.871 - 32) : Math.round(H * 0.128 - 32);
 
   const el = document.createElement("div");
   el.className = "nm-outer";
