@@ -38,7 +38,7 @@ const ABIL=[
    fx:"{C}{C}{C} → 4 Blockable\n{C}{C}{C}{C} → 5 Blockable\n{C}{C}{C}{C}{C} → 6 Blockable\n4OAK: Inflict Wound"},
   {id:"cure",    n:"NATURE'S CURE",   c:"#289048",t:"off",
    req:[{type:"claw",count:2},{type:"nature",count:2}],
-   fx:"Gain Regenerate.\n6 Blockable"},
+   fx:"Gain Regenerate.\n5 Blockable"},
   {id:"realign", n:"WILD REALIGNMENT",c:"#B0862C",t:"off",
    req:[{type:"claw",count:1},{type:"paw",count:2},{type:"nature",count:1}],
    fx:"Gain 1 CP and 2 Shape Shift.\nThen draw 1 if in Druid Form."},
@@ -62,9 +62,27 @@ const ABIL=[
    fx:"Gain Regenerate and 2 Shape Shift. 12 Undefendable"},
 ];
 
-// No upgrades yet — Druid starts with just the printed board.
-const ABIL2={};
-const CARD_UPGRADES={};
+// ─── UPGRADES ────────────────────────────────────────────────────────────────
+// Upgraded ability versions, keyed by the base ability id they replace.
+// A `sub` adds a second ability that shares the same board slot.
+const ABIL2={
+  ferocity:{n:"FEROCITY 2",c:"#C0402C",t:"off",
+    req:[{type:"claw",count:3}],hideReq:true,
+    fx:"{C}{C}{C} → 5 Blockable\n{C}{C}{C}{C} → 6 Blockable\n{C}{C}{C}{C}{C} → 7 Blockable\n3OAK: Inflict Wound"},
+  maul:{n:"MAUL 2",c:"#8C5A1E",t:"off",
+    req:[{type:"paw",count:4}],
+    fx:"Roll 2 dice and deal dmg equal to total value.\nIf in Bear Form, you may reroll one.",
+    sub:{n:"SAVAGE MAUL",c:"#8C5A1E",
+      req:[{type:"paw",count:5}],
+      fx:"Gain Shape Shift. Activate MAUL 2."}},
+  protect:{n:"PROTECT THE FOREST 2",c:"#1E6830",t:"off",
+    req:[{type:"nature",count:4}],
+    fx:"Gain Regenerate and Shape Shift. 8 Undefendable.",
+    sub:{n:"RAINFALL",c:"#289048",
+      req:[{type:"nature",count:3}],
+      fx:"Gain 1 CP and 2 Regenerate."}},
+};
+const CARD_UPGRADES={d_u1:"ferocity",d_u2:"maul",d_u3:"protect"};
 
 // ─── CARDS ───────────────────────────────────────────────────────────────────
 // Druid's unique cards. (Board upgrades to be added later.) These mix in with
@@ -81,6 +99,9 @@ const CARDS=[
   {id:"d_shrug",     n:"SHRUG OFF",             cp:0,t:"orange",e:"🐻🛡",x:"Play only after being attacked.<br>If in Bear Form, prevent 2 dmg."},
   {id:"d_poke",      n:"DON'T POKE THE BEAR!",  cp:0,t:"orange",e:"🐻😡",x:"Play only after being attacked.<br>If in Bear Form, 2 Undefendable."},
   {id:"d_morph",     n:"QUICK MORPH",           cp:2,t:"red",   e:"✨🔀",x:"Gain Shape Shift."},
+  {id:"d_u1",n:"FEROCITY 2",                cp:2,t:"blue",e:"🐾💥💥",x:"UPGRADE Ferocity: 3 Claw → 5, 4 Claw → 6, 5 Claw → 7 Blockable. On 3-of-a-kind: Inflict Wound."},
+  {id:"d_u2",n:"MAUL 2 + SAVAGE MAUL",      cp:2,t:"blue",e:"🐻🐾💥",x:"UPGRADE Maul (4 Paw): Roll 2 dice, deal dmg equal to total; if in Bear Form you may reroll one. ADDS Savage Maul (5 Paw): Gain Shape Shift, activate Maul 2."},
+  {id:"d_u3",n:"PROTECT THE FOREST 2 + RAINFALL",cp:2,t:"blue",e:"🌳🌧🌿",x:"UPGRADE Protect The Forest (4 Nature): Gain Regenerate and Shape Shift, 8 Undefendable. ADDS Rainfall (3 Nature): Gain 1 CP and 2 Regenerate."},
 ];
 
 const GLOBAL_CARDS=[
