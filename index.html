@@ -22,6 +22,9 @@ button{font-family:inherit;cursor:pointer}
 #center-block{position:absolute;top:calc(46px + var(--hand-h));left:0;right:var(--panel-w);bottom:calc(var(--hand-h) + 6px);display:flex;flex-direction:column;overflow:hidden}
 #p2sec{flex:1;overflow:hidden;border-bottom:1px solid var(--bdr);min-height:0;position:relative;z-index:1}
 #p1sec{flex:1;overflow:hidden;border-top:1px solid var(--bdr);min-height:0;position:relative;z-index:1}
+.ps-form-widget{position:absolute;top:6px;left:8px;z-index:5;pointer-events:none}
+.ps-form-widget:empty{display:none}
+.ps-form-widget>*{pointer-events:auto}
 #tz{height:0;overflow:visible;position:relative;flex-shrink:0}
 /* Resizer pill pinned just above p1 hand */
 #hand-resizer{position:absolute;bottom:var(--hand-h);left:0;right:var(--panel-w);height:6px;background:transparent;cursor:ns-resize;z-index:20}
@@ -335,9 +338,9 @@ button{font-family:inherit;cursor:pointer}
 
 <!-- Center block: p2 grid + dice strips + p1 grid. Fixed in the middle, never pushed by hand resize. -->
 <div id="center-block">
-<div id="p2sec"><div id="p2grid"></div></div>
+<div id="p2sec"><div id="p2formwidget" class="ps-form-widget"></div><div id="p2grid"></div></div>
 
-<div id="p1sec"><div id="p1grid"></div></div>
+<div id="p1sec"><div id="p1formwidget" class="ps-form-widget"></div><div id="p1grid"></div></div>
 </div><!-- /center-block -->
 
 <!-- Resize handle — positioned by CSS -->
@@ -617,8 +620,9 @@ function applyCharacter(player,cd){
   S[player].dice=Array(5).fill(0).map((_,i)=>({v:1,inTray:false,_i:i}));
   S[player].hasRolled=false;
   S[player].tokens=cd.initTokenState();
+  S[player].formState=cd.hasFormWidget?cd.initFormState():null;
   S.upgrades[player]={};
-  buildGrid(player+"grid",player);renderDice(player);renderTokens(player);
+  buildGrid(player+"grid",player);renderDice(player);renderTokens(player);renderFormWidget(player);
   renderHands();updateDrawBtn(player);
   const spacer=document.getElementById(player+"hex-spacer");
   if(spacer)spacer.style.width=cd.hasHexTokens?"80px":"0px";
@@ -1525,6 +1529,15 @@ function renderTokens(player){
   char.renderTokens(player,S[player].tokens,container);
 }
 
+// ─── FORM WIDGET (e.g. Druid's Druid/Tiger/Bear switcher + Shape Shift) ───────
+function renderFormWidget(player){
+  const char=S.chars[player],container=document.getElementById(player+"formwidget");
+  if(!container)return;
+  container.innerHTML="";
+  if(!char||!char.hasFormWidget||!S[player].formState)return;
+  char.renderFormWidget(player,S[player].formState,container);
+}
+
 // ─── DICE ────────────────────────────────────────────────────────────────────
 const d6=()=>Math.floor(Math.random()*6)+1;
 const DIE_SIZE=52;
@@ -2346,7 +2359,7 @@ function doResetGame(){
   document.getElementById("hdr-sub").textContent="Season Two";
   ["p1hp","p1cp","p2hp","p2cp"].forEach(id=>document.getElementById(id).textContent=id.includes("hp")?"50":"2");
   ["p1leaflet-btn","p2leaflet-btn"].forEach(id=>{const b=document.getElementById(id);if(b)b.style.display="none";});
-  buildGrids();renderDice("p1");renderDice("p2");renderHands();renderTokens("p1");renderTokens("p2");
+  buildGrids();renderDice("p1");renderDice("p2");renderHands();renderTokens("p1");renderTokens("p2");renderFormWidget("p1");renderFormWidget("p2");
 }
 document.addEventListener("click",e=>{
   if(lastCardMoved||cardDrag.active||ovDrag.active)return;
@@ -2358,7 +2371,7 @@ document.addEventListener("contextmenu",e=>{
   if(die&&die.dataset.p&&(!NET.on||die.dataset.p===NET.me))cycleVal(die.dataset.p,+die.dataset.i);
 });
 window.addEventListener("load",()=>{
-  buildGrids();renderDice("p1");renderDice("p2");renderHands();renderTokens("p1");renderTokens("p2");
+  buildGrids();renderDice("p1");renderDice("p2");renderHands();renderTokens("p1");renderTokens("p2");renderFormWidget("p1");renderFormWidget("p2");
   initDieDrag();
   observeAbilSizing();
   loadSavedLayout();
