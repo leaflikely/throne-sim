@@ -31,6 +31,11 @@ button{font-family:inherit;cursor:pointer}
 /* Dice rows at top/bottom of play space */
 /* ── Dice Hand zones (top/bottom of play space) ── */
 .ps-hand-zone{width:100%;display:flex;flex-direction:column;gap:5px;padding:7px 10px;flex-shrink:0;background:#07101E;position:relative}
+/* Show the edge of each player's zone where it meets the shared tray area,
+   but not at the outer edge (against the header/screen edge) — that space
+   was intentionally reclaimed. */
+#p2hand-zone{border-bottom:1px solid var(--bdrhi)}
+#p1hand-zone{border-top:1px solid var(--bdrhi)}
 /* P1 (bottom zone): dice nearest the outer edge → dice row on top of the zone,
    then HP/CP, then tokens nearest the tray. P2 (top zone) mirrors it. */
 #p1hand-zone{flex-direction:column}
@@ -1161,14 +1166,29 @@ function resetLayout(){
       if(inner)inner.style.transform="";
     });
   });
+  // Re-apply the baked-in default rather than leaving bare flex flow — that
+  // default is the arrangement the user tuned and confirmed, so "reset"
+  // should mean "back to that," not "back to the original unstyled layout."
+  applyLayout(DEFAULT_LAYOUT);
   if(layoutEditing)toggleLayoutEdit(true);
 }
 
+// Baked-in default layout — the positions/sizes the user tuned and confirmed
+// look good. Used whenever this browser has no saved layout of its own yet
+// (a fresh install, or after Reset Layout).
+const DEFAULT_LAYOUT={
+  "stats":{"xf":0.586,"yf":0.032,"wf":0.401,"hf":0.241,"scale":1.127},
+  "leaflet":{"xf":0.874,"yf":0.86,"wf":0.116,"hf":0.102,"scale":1},
+  "discard":{"xf":0.009,"yf":0.579,"wf":0.118,"hf":0.404,"scale":1.526},
+  "all":{"xf":0.137,"yf":0.572,"wf":0.099,"hf":0.149,"scale":1.314},
+  "dicerow":{"xf":0.144,"yf":0.734,"wf":0.571,"hf":0.241,"scale":1},
+};
+
 function loadSavedLayout(){
   let raw=null;try{raw=localStorage.getItem(LAYOUT_KEY);}catch(err){}
-  if(!raw)return;
-  let data=null;try{data=JSON.parse(raw);}catch(err){return;}
-  if(!data)return;
+  if(!raw){applyLayout(DEFAULT_LAYOUT);return;}
+  let data=null;try{data=JSON.parse(raw);}catch(err){applyLayout(DEFAULT_LAYOUT);return;}
+  if(!data){applyLayout(DEFAULT_LAYOUT);return;}
   applyLayout(data);
 }
 // Re-apply on resize so the saved fractional layout stays correct at any
