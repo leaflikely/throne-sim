@@ -607,7 +607,7 @@ function loadCharacter(player,charId){
     applyCharacter(player,cd);
   }
   if(window.DT_CHARACTERS&&window.DT_CHARACTERS[charId]){activate();return;}
-  const s=document.createElement("script");s.src=entry.file;s.onload=activate;
+  const s=document.createElement("script");s.src=entry.file+"?v="+Date.now();s.onload=activate;
   s.onerror=()=>alert("Could not load "+entry.file);
   document.head.appendChild(s);
 }
