@@ -22,9 +22,8 @@ button{font-family:inherit;cursor:pointer}
 #center-block{position:absolute;top:calc(46px + var(--hand-h));left:0;right:var(--panel-w);bottom:calc(var(--hand-h) + 6px);display:flex;flex-direction:column;overflow:hidden}
 #p2sec{flex:1;overflow:hidden;border-bottom:1px solid var(--bdr);min-height:0;position:relative;z-index:1}
 #p1sec{flex:1;overflow:hidden;border-top:1px solid var(--bdr);min-height:0;position:relative;z-index:1}
-.ps-form-widget{position:absolute;top:6px;left:8px;z-index:5;pointer-events:none}
+.ps-form-widget{display:flex;align-items:center;flex-shrink:0}
 .ps-form-widget:empty{display:none}
-.ps-form-widget>*{pointer-events:auto}
 #tz{height:0;overflow:visible;position:relative;flex-shrink:0}
 /* Resizer pill pinned just above p1 hand */
 #hand-resizer{position:absolute;bottom:var(--hand-h);left:0;right:var(--panel-w);height:6px;background:transparent;cursor:ns-resize;z-index:20}
@@ -338,9 +337,9 @@ button{font-family:inherit;cursor:pointer}
 
 <!-- Center block: p2 grid + dice strips + p1 grid. Fixed in the middle, never pushed by hand resize. -->
 <div id="center-block">
-<div id="p2sec"><div id="p2formwidget" class="ps-form-widget"></div><div id="p2grid"></div></div>
+<div id="p2sec"><div id="p2grid"></div></div>
 
-<div id="p1sec"><div id="p1formwidget" class="ps-form-widget"></div><div id="p1grid"></div></div>
+<div id="p1sec"><div id="p1grid"></div></div>
 </div><!-- /center-block -->
 
 <!-- Resize handle — positioned by CSS -->
@@ -365,6 +364,7 @@ button{font-family:inherit;cursor:pointer}
   <!-- P2 Dice Hand — top -->
   <div class="ps-hand-zone" id="p2hand-zone">
     <div class="ps-tokens-row">
+      <div id="p2formwidget" class="ps-form-widget"></div>
       <div id="p2tokens" style="display:flex;gap:6px;align-items:center"></div>
       <div id="p2hex-spacer" style="width:0px;flex-shrink:0;transition:width .2s"></div>
     </div>
@@ -433,6 +433,7 @@ button{font-family:inherit;cursor:pointer}
   <!-- P1 Dice Hand — bottom -->
   <div class="ps-hand-zone" id="p1hand-zone">
     <div class="ps-tokens-row">
+      <div id="p1formwidget" class="ps-form-widget"></div>
       <div id="p1tokens" style="display:flex;gap:6px;align-items:center"></div>
       <div id="p1hex-spacer" style="width:0px;flex-shrink:0;transition:width .2s"></div>
     </div>
