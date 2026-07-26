@@ -144,6 +144,11 @@ function initFormState() {
 // on Druid — plus a brown triangle counter (0-2) for the Shape Shift token.
 const FORM_LIST=["Druid","Cat","Bear"];
 const FORM_COLORS={Druid:"#4890E0",Cat:"#D8402C",Bear:"#D8C020"};
+const FORM_REMINDERS={
+  Druid:"End of turn, Regenerate.",
+  Cat:"If you conclude ORP with an Attack, add 2 dmg and inflict Wound.",
+  Bear:"THICK HIDE is stronger.",
+};
 
 function renderFormWidget(player, formState, container) {
   container.innerHTML = "";
@@ -151,7 +156,11 @@ function renderFormWidget(player, formState, container) {
   if (typeof formState.shapeshift !== "number") formState.shapeshift = 0;
 
   const wrap = document.createElement("div");
-  wrap.style.cssText = "display:flex;align-items:center;gap:8px;pointer-events:auto";
+  wrap.style.cssText = "display:flex;align-items:flex-start;gap:8px;pointer-events:auto";
+
+  // Left column: form buttons on top, reminder text underneath
+  const leftCol = document.createElement("div");
+  leftCol.style.cssText = "display:flex;flex-direction:column;gap:3px";
 
   // Form buttons
   const btnRow = document.createElement("div");
@@ -176,7 +185,15 @@ function renderFormWidget(player, formState, container) {
     btn.addEventListener("mouseleave", () => { if (formState.form !== form) btn.style.borderColor = "var(--bdrhi)"; });
     btnRow.appendChild(btn);
   });
-  wrap.appendChild(btnRow);
+  leftCol.appendChild(btnRow);
+
+  // Reminder text for the currently selected form
+  const reminder = document.createElement("div");
+  reminder.textContent = FORM_REMINDERS[formState.form] || "";
+  reminder.style.cssText = "max-width:170px;font-size:7px;line-height:1.35;font-weight:600;color:" + FORM_COLORS[formState.form] + ";letter-spacing:.2px";
+  leftCol.appendChild(reminder);
+
+  wrap.appendChild(leftCol);
 
   // Shapeshift counter: brown triangle, 0-2. Click to increment, right-click to decrement.
   const triWrap = document.createElement("div");
@@ -223,8 +240,6 @@ function buildOverlayTokens(player, addFn, removeFn) {
 }
 
 function placeDruidTokens(player) {
-  const pLabel = player === "p1" ? "P1" : "P2";
-  const pColor = player === "p1" ? "#00C4A0" : "#4890E0";
   const anchor = document.getElementById(player + "formwidget");
 
   // Base position: just right of the Shape Shift counter.
@@ -247,8 +262,7 @@ function placeDruidTokens(player) {
     const el = document.createElement("div");
     el.style.cssText = "display:flex;flex-direction:column;align-items:center;gap:1px";
     el.innerHTML =
-      '<svg width="36" height="36" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="#E060A033" stroke="#E060A0" stroke-width="2"/><path d="M8 8 L16 16 M16 8 L8 16" stroke="#E060A0" stroke-width="2.2" stroke-linecap="round"/></svg>'
-      + '<span style="font-size:6px;color:' + pColor + ';font-weight:700;letter-spacing:1px">' + pLabel + '</span>';
+      '<svg width="36" height="36" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="#E060A033" stroke="#E060A0" stroke-width="2"/><path d="M8 8 L16 16 M16 8 L8 16" stroke="#E060A0" stroke-width="2.2" stroke-linecap="round"/></svg>';
     window.addOverlayToken(id, el, baseX + i * 42, baseY);
   }
 
@@ -267,8 +281,7 @@ function placeDruidTokens(player) {
       const num  = dark ? "2" : "1";
       el.innerHTML =
         '<svg width="36" height="36" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="' + fill + '" stroke="' + ring + '" stroke-width="2"/>'
-        + '<text x="12" y="16.5" text-anchor="middle" font-size="12" font-weight="700" fill="' + ring + '">' + num + '</text></svg>'
-        + '<span style="font-size:6px;color:' + pColor + ';font-weight:700;letter-spacing:1px">' + pLabel + '</span>';
+        + '<text x="12" y="16.5" text-anchor="middle" font-size="12" font-weight="700" fill="' + ring + '">' + num + '</text></svg>';
     };
     draw();
 
