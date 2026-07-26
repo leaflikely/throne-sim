@@ -2556,7 +2556,7 @@ function netSendDice(p){
     dice:S[p].dice.map(d=>({v:d.v,inTray:!!d.inTray,tx:d.tx,ty:d.ty,angle:d.angle||0}))});
   netSaveLocal();
 }
-function netSendTok(p){if(p!==NET.me)return;netSend({t:"tok",p:p,tokens:S[p].tokens});netSaveLocal();}
+function netSendTok(p){if(p!==NET.me)return;netSend({t:"tok",p:p,tokens:S[p].tokens,formState:S[p].formState});netSaveLocal();}
 function netBoardList(p){ // my visible cards on the board, positions as window fractions
   const out=[];
   Object.keys(CARD_OV).forEach(id=>{
@@ -2588,7 +2588,7 @@ function netSaveLocal(){
   const upg={};Object.keys(S.upgrades[me]).forEach(a=>{upg[a]=S.upgrades[me][a]._cardId;});
   const data={charId:S.chars[me]?S.chars[me].id:null,hp:P.hp,cp:P.cp,hasRolled:!!P.hasRolled,
     dice:P.dice.map(d=>({v:d.v,inTray:!!d.inTray,tx:d.tx,ty:d.ty,angle:d.angle||0})),
-    tokens:P.tokens,hand:P.hand,deck:P.deck,discard:P.discard,forge:P.forge||[],upg:upg,board:netBoardList(me)};
+    tokens:P.tokens,formState:P.formState,hand:P.hand,deck:P.deck,discard:P.discard,forge:P.forge||[],upg:upg,board:netBoardList(me)};
   try{localStorage.setItem("dt_save_"+NET.room+"_"+me,JSON.stringify(data));}catch(e){}
 }
 function netRestoreLocal(){
@@ -2607,13 +2607,14 @@ function applyLocalSave(d){
   const cpEl=document.getElementById(me+"cp");if(cpEl)cpEl.textContent=d.cp;
   d.dice.forEach((nd,i)=>{const od=P.dice[i];if(!od)return;od.v=nd.v;od.inTray=nd.inTray;od.tx=nd.tx;od.ty=nd.ty;od.angle=nd.angle;});
   if(d.tokens)P.tokens=d.tokens;
+  if(d.formState)P.formState=d.formState;
   P.hand=(d.hand||[]).slice();P.deck=(d.deck||[]).slice();P.discard=(d.discard||[]).slice();
   P.forge=(d.forge||[]).slice();
   S.upgrades[me]={};
   Object.keys(d.upg||{}).forEach(a=>{if(char.upgrades[a])S.upgrades[me][a]={...char.upgrades[a],_cardId:d.upg[a]};});
   (d.board||[]).forEach(b=>makeBoardCard(me,b.cid,b.id,Math.round(b.rx*window.innerWidth),Math.round(b.ry*window.innerHeight),true));
   buildGrid(me+"grid",me);autoSizeAbilCards();
-  renderDice(me);renderTokens(me);renderHands();updateDrawBtn(me);updateDiscardDisplay(me);updateForgeDisplay(me);updateAvailableAbils(me);
+  renderDice(me);renderTokens(me);renderFormWidget(me);renderHands();updateDrawBtn(me);updateDiscardDisplay(me);updateForgeDisplay(me);updateAvailableAbils(me);
   const info=document.getElementById(me+"info");if(info)info.textContent="Hand:"+P.hand.length;
   netSendAll();
 }
@@ -2649,6 +2650,7 @@ function netApply(d){
       if(d.p===me)break;
       if(!S.chars[d.p]){NET.pending[d.p].push(d);break;}
       S[d.p].tokens=d.tokens;renderTokens(d.p);
+      if(d.formState!==undefined){S[d.p].formState=d.formState;renderFormWidget(d.p);}
       break;}
     case "cards":{
       if(d.p===me)break;
