@@ -92,7 +92,7 @@ button{font-family:inherit;cursor:pointer}
    is wrapped in .layout-obj. By default it just participates in normal flow.
    Once a saved layout exists (or edit mode is active), JS switches it to
    position:absolute with left/top/width/height driven by saved fractions. */
-.layout-obj{position:relative;min-width:4px;min-height:4px}
+.layout-obj{position:relative;min-width:4px;min-height:4px;display:flex;align-items:center;justify-content:center}
 .layout-obj.editing{outline:1.5px dashed var(--teal);outline-offset:2px;cursor:move;z-index:50}
 .layout-obj.editing:hover{outline-color:#00E8C0}
 .layout-handle{position:absolute;right:-6px;bottom:-6px;width:12px;height:12px;background:var(--teal);border:1.5px solid #06090F;border-radius:3px;cursor:nwse-resize;z-index:51;display:none}
@@ -902,12 +902,16 @@ function layoutObjEl(player,obj){
 }
 
 // Ensure an object is position:absolute (relative to its .ps-hand-zone) so it
-// can be freely dragged, seeding left/top/width/height from its current
-// on-screen box the first time this runs.
-function primeAbsolute(el){
+// can be freely dragged. `rect`, if given, is a pre-captured
+// {left,top,width,height} snapshot (viewport coordinates) taken BEFORE any
+// sibling object was pulled out of flow — required because switching one
+// object to position:absolute shifts where the remaining in-flow objects
+// sit, which would corrupt a live measurement taken mid-loop.
+function primeAbsolute(el,rect){
   if(el.dataset.primed)return;
   const zone=el.closest(".ps-hand-zone");
-  const zr=zone.getBoundingClientRect(),er=el.getBoundingClientRect();
+  const zr=zone.getBoundingClientRect();
+  const er=rect||el.getBoundingClientRect();
   el.style.position="absolute";
   el.style.left=(er.left-zr.left)+"px";
   el.style.top=(er.top-zr.top)+"px";
@@ -945,12 +949,26 @@ function toggleLayoutEdit(skipRevert){
     const el=layoutObjEl("p1",obj);
     if(!el)return;
     if(layoutEditing){
-      primeAbsolute(el);
       el.classList.add("editing");
     }else{
       el.classList.remove("editing");
     }
   });
+  if(layoutEditing){
+    // Measure every object's natural (in-flow) position FIRST, while all
+    // five are still untouched — pulling even one out to position:absolute
+    // shifts where the remaining in-flow objects sit, which would corrupt
+    // measurements taken later in this same pass.
+    const rects={};
+    LAYOUT_OBJS.forEach(obj=>{
+      const el=layoutObjEl("p1",obj);
+      if(el&&!el.dataset.primed)rects[obj]=el.getBoundingClientRect();
+    });
+    LAYOUT_OBJS.forEach(obj=>{
+      const el=layoutObjEl("p1",obj);
+      if(el)primeAbsolute(el,rects[obj]);
+    });
+  }
   // Cancelling out of edit mode (button pressed again, not Save) discards
   // any unsaved drag/resize changes — revert to the last saved layout, or
   // back to default flow positions if nothing was ever saved.
@@ -1100,17 +1118,21 @@ function applyLayout(data){
       const d=data[obj];if(!d)return;
       const zone=el.closest(".ps-hand-zone");if(!zone)return;
       const zr=zone.getBoundingClientRect();
-      let xf=d.xf,yf=d.yf;
+      // Clamp to sane bounds — guards against stale/corrupted values from
+      // an earlier bug (e.g. a runaway resize) so a bad old save self-heals
+      // instead of rendering a giant or off-screen box.
+      const wf=Math.max(0.02,Math.min(1,d.wf)),hf=Math.max(0.02,Math.min(1,d.hf));
+      let xf=Math.max(0,Math.min(1-wf,d.xf)),yf=Math.max(0,Math.min(1-hf,d.yf));
       if(player==="p2"){
         // Mirror vertically within the zone: flip distance from the top edge
         // to distance from the bottom edge (P2's zone is P1's zone flipped).
-        yf=1-d.yf-d.hf;
+        yf=1-yf-hf;
       }
       el.style.position="absolute";
       el.style.left=(xf*zr.width)+"px";
       el.style.top=(yf*zr.height)+"px";
-      el.style.width=(d.wf*zr.width)+"px";
-      el.style.height=(d.hf*zr.height)+"px";
+      el.style.width=(wf*zr.width)+"px";
+      el.style.height=(hf*zr.height)+"px";
       el.dataset.primed="1";
       const inner=el.firstElementChild;
       if(inner&&d.scale&&d.scale!==1)inner.style.transform="scale("+d.scale+")";
