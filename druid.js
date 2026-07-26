@@ -51,13 +51,13 @@ const ABIL=[
   {id:"answer",  n:"FOREST'S ANSWER", c:"#1E6830",t:"off",
    req:[{type:"text",label:"Large Straight"}],
    fx:"Gain Shape Shift.\nDeal 7 Blockable and roll 1:\nOn {C}, +2 dmg.\nOn {P}, gain Shape Shift.\nOn {N}, gain Regenerate."},
-  {id:"protect", n:"PROTECT THE FOREST",c:"#1E6830",t:"off",pairWith:"wrath",
+  {id:"protect", n:"PROTECT THE FOREST",c:"#1E6830",t:"off",
    req:[{type:"nature",count:4}],
    fx:"Gain Regenerate and Shape Shift. 6 Undefendable."},
   {id:"hide",    n:"THICK HIDE",      c:"#1E6830",t:"def",defDice:2,
    req:[],
    fx:"1 Undefendable X {C}\nIf in Bear Form, roll 4 dice instead and prevent 1X({P}+{N}) dmg."},
-  {id:"wrath",   n:"WRATH OF NATURE!",c:"#906808",t:"ult",ultDice:5,pairWith:"protect",rowGrow:1.5,
+  {id:"wrath",   n:"WRATH OF NATURE!",c:"#906808",t:"ult",ultDice:5,rowGrow:1.5,
    req:[{type:"nature",count:5}],hideReq:true,
    fx:"Gain Regenerate and 2 Shape Shift. 12 Undefendable"},
 ];
@@ -235,7 +235,12 @@ function placeDruidTokens(player) {
     baseY = r.top + r.height / 2 - 16;
   }
 
-  // Row 1: Wound tokens (larger circle now that the WOUND word is gone)
+  // Second row goes below the wounds for P1 (bottom playspace) but above them
+  // for P2 (top playspace), so the two players' token clusters mirror each
+  // other: for both, the Regen row sits on the side nearer the game board.
+  const regenDY = player === "p1" ? 48 : -48;
+
+  // Wound row (anchored at baseY for both players)
   for (let i = 0; i < 2; i++) {
     const id = "wound_" + player + "_" + i;
     if (document.getElementById(id)) continue;
@@ -247,7 +252,7 @@ function placeDruidTokens(player) {
     window.addOverlayToken(id, el, baseX + i * 42, baseY);
   }
 
-  // Row 2: Regen tokens (underneath the wound row), flippable 2 <-> 1
+  // Regen row (below wounds for P1, above wounds for P2), flippable 2 <-> 1
   for (let i = 0; i < 2; i++) {
     const id = "regen_" + player + "_" + i;
     if (document.getElementById(id)) continue;
@@ -278,7 +283,7 @@ function placeDruidTokens(player) {
       if (window.netOvState) window.netOvState(id, el.dataset.side);
     });
 
-    window.addOverlayToken(id, el, baseX + i * 42, baseY + 48);
+    window.addOverlayToken(id, el, baseX + i * 42, baseY + regenDY);
   }
 }
 
