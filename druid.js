@@ -155,12 +155,17 @@ function renderFormWidget(player, formState, container) {
   if (!formState.form) formState.form = "Druid";
   if (typeof formState.shapeshift !== "number") formState.shapeshift = 0;
 
+  // Outer column. Reminder text goes ABOVE the buttons for P2 (top play space)
+  // and BELOW for P1 (bottom play space), so the two players mirror naturally.
+  const isP2 = player === "p2";
   const wrap = document.createElement("div");
-  wrap.style.cssText = "display:flex;align-items:flex-start;gap:8px;pointer-events:auto";
+  wrap.style.cssText = "display:flex;flex-direction:column;gap:3px;align-items:flex-start;pointer-events:auto";
 
-  // Left column: form buttons on top, reminder text underneath
-  const leftCol = document.createElement("div");
-  leftCol.style.cssText = "display:flex;flex-direction:column;gap:3px";
+  // Row holding the form buttons and the Shape Shift triangle side by side.
+  // The triangle lives in this row so its position is fixed by the buttons and
+  // is never pushed around by the (wrapping) reminder text below/above.
+  const midRow = document.createElement("div");
+  midRow.style.cssText = "display:flex;align-items:center;gap:8px";
 
   // Form buttons
   const btnRow = document.createElement("div");
@@ -185,15 +190,7 @@ function renderFormWidget(player, formState, container) {
     btn.addEventListener("mouseleave", () => { if (formState.form !== form) btn.style.borderColor = "var(--bdrhi)"; });
     btnRow.appendChild(btn);
   });
-  leftCol.appendChild(btnRow);
-
-  // Reminder text for the currently selected form
-  const reminder = document.createElement("div");
-  reminder.textContent = FORM_REMINDERS[formState.form] || "";
-  reminder.style.cssText = "max-width:170px;font-size:7px;line-height:1.35;font-weight:600;color:" + FORM_COLORS[formState.form] + ";letter-spacing:.2px";
-  leftCol.appendChild(reminder);
-
-  wrap.appendChild(leftCol);
+  midRow.appendChild(btnRow);
 
   // Shapeshift counter: brown triangle, 0-2. Click to increment, right-click to decrement.
   const triWrap = document.createElement("div");
@@ -215,9 +212,23 @@ function renderFormWidget(player, formState, container) {
     renderFormWidget(player, formState, container);
     if (window.netTokens) window.netTokens(player);
   });
-  wrap.appendChild(triWrap);
+  midRow.appendChild(triWrap);
+
+  // Reminder text for the current form. Its width is capped to the button row
+  // (measured after layout) so the text wraps and never runs past the BEAR
+  // button's right edge, and its own wrapping never moves the triangle.
+  const reminder = document.createElement("div");
+  reminder.textContent = FORM_REMINDERS[formState.form] || "";
+  reminder.style.cssText = "font-size:7px;line-height:1.35;font-weight:600;color:" + FORM_COLORS[formState.form] + ";letter-spacing:.2px";
+
+  if (isP2) { wrap.appendChild(reminder); wrap.appendChild(midRow); }
+  else      { wrap.appendChild(midRow); wrap.appendChild(reminder); }
 
   container.appendChild(wrap);
+
+  // Cap the reminder to the buttons' width now that everything is laid out.
+  const bw = btnRow.getBoundingClientRect().width;
+  if (bw) reminder.style.maxWidth = Math.round(bw) + "px";
 }
 
 function dieIcon(faceValue, locked, size) {
