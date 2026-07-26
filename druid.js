@@ -39,10 +39,10 @@ const ABIL=[
    fx:"Gain Regenerate.\n6 Blockable"},
   {id:"realign", n:"WILD REALIGNMENT",c:"#B0862C",t:"off",
    req:[{type:"claw",count:1},{type:"paw",count:2},{type:"nature",count:1}],
-   fx:"Gain 1 CP and 2 Shape Shift.\nThen draw 1 if in Druid form."},
+   fx:"Gain 1 CP and 2 Shape Shift.\nThen draw 1 if in Druid Form."},
   {id:"maul",    n:"MAUL",            c:"#8C5A1E",t:"off",
    req:[{type:"paw",count:4}],
-   fx:"Roll 2 dice and deal dmg equal to total value.\nIf in Bear form, you may reroll one."},
+   fx:"Roll 2 dice and deal dmg equal to total value.\nIf in Bear Form, you may reroll one."},
   {id:"call",    n:"FOREST'S CALL",   c:"#3A9C5C",t:"off",
    req:[{type:"text",label:"Small Straight"}],
    fx:"Gain Shape Shift.\n6 Blockable"},
@@ -51,13 +51,13 @@ const ABIL=[
    fx:"Gain Shape Shift.\nDeal 7 Blockable and roll 1:\nOn {C}, +2 dmg.\nOn {P}, gain Shape Shift.\nOn {N}, gain Regenerate."},
   {id:"protect", n:"PROTECT THE FOREST",c:"#1E6830",t:"off",pairWith:"wrath",
    req:[{type:"nature",count:4}],
-   fx:"Gain Regenerate and Shape Shift.\n6 Undefendable."},
+   fx:"Gain Regenerate and Shape Shift. 6 Undefendable."},
   {id:"hide",    n:"THICK HIDE",      c:"#1E6830",t:"def",defDice:2,
    req:[],
-   fx:"1 Undefendable X {C}\nIf in Bear form, roll 4 dice instead and prevent 1X({P}+{N}) dmg."},
+   fx:"1 Undefendable X {C}\nIf in Bear Form, roll 4 dice instead and prevent 1X({P}+{N}) dmg."},
   {id:"wrath",   n:"WRATH OF NATURE!",c:"#906808",t:"ult",ultDice:5,pairWith:"protect",rowGrow:1.5,
    req:[{type:"nature",count:5}],hideReq:true,
-   fx:"Gain Regenerate and 2 Shape Shift.\n12 Undefendable"},
+   fx:"Gain Regenerate and 2 Shape Shift. 12 Undefendable"},
 ];
 
 // No upgrades yet — Druid starts with just the printed board.
@@ -107,6 +107,7 @@ function initFormState() {
 // Three buttons (Druid/Tiger/Bear form) — only one selected at a time, starts
 // on Druid — plus a brown triangle counter (0-2) for the Shape Shift token.
 const FORM_LIST=["Druid","Tiger","Bear"];
+const FORM_COLORS={Druid:"#4890E0",Tiger:"#D8402C",Bear:"#D8C020"};
 
 function renderFormWidget(player, formState, container) {
   container.innerHTML = "";
@@ -121,12 +122,13 @@ function renderFormWidget(player, formState, container) {
   btnRow.style.cssText = "display:flex;gap:4px";
   FORM_LIST.forEach(form => {
     const active = formState.form === form;
+    const col = FORM_COLORS[form];
     const btn = document.createElement("button");
     btn.textContent = form.toUpperCase();
     btn.style.cssText =
       "font-size:8px;font-weight:700;letter-spacing:.5px;padding:4px 8px;border-radius:4px;cursor:pointer;white-space:nowrap;transition:color .1s,border-color .1s,background .1s;"
       + (active
-          ? "border:1.5px solid #3A9C5C;color:#3A9C5C;background:#28904822;"
+          ? "border:1.5px solid "+col+";color:"+col+";background:"+col+"22;"
           : "border:1.5px solid var(--bdrhi);background:transparent;color:var(--txtd);");
     btn.addEventListener("click", () => {
       if (window.netCanEdit && !window.netCanEdit(player)) return;
@@ -134,7 +136,7 @@ function renderFormWidget(player, formState, container) {
       renderFormWidget(player, formState, container);
       if (window.netTokens) window.netTokens(player);
     });
-    btn.addEventListener("mouseenter", () => { if (formState.form !== form) btn.style.borderColor = "#3A9C5C"; });
+    btn.addEventListener("mouseenter", () => { if (formState.form !== form) btn.style.borderColor = col; });
     btn.addEventListener("mouseleave", () => { if (formState.form !== form) btn.style.borderColor = "var(--bdrhi)"; });
     btnRow.appendChild(btn);
   });
@@ -145,8 +147,8 @@ function renderFormWidget(player, formState, container) {
   triWrap.style.cssText = "position:relative;width:30px;height:28px;flex-shrink:0;cursor:pointer;user-select:none";
   triWrap.title = "Shape Shift (click +, right-click −)";
   triWrap.innerHTML =
-    '<svg width="30" height="28" viewBox="0 0 30 28"><polygon points="15,2 28,25 2,25" fill="#8C5A1E33" stroke="#8C5A1E" stroke-width="2"/></svg>'
-    + '<span style="position:absolute;left:0;right:0;bottom:3px;text-align:center;font-size:11px;font-weight:700;color:#C08A46">' + formState.shapeshift + '</span>';
+    '<svg width="30" height="28" viewBox="0 0 30 28"><polygon points="15,2 28,25 2,25" fill="#E0803033" stroke="#E08030" stroke-width="2"/></svg>'
+    + '<span style="position:absolute;left:0;right:0;bottom:3px;text-align:center;font-size:11px;font-weight:700;color:#F0A860">' + formState.shapeshift + '</span>';
   triWrap.addEventListener("click", () => {
     if (window.netCanEdit && !window.netCanEdit(player)) return;
     formState.shapeshift = Math.min(2, formState.shapeshift + 1);
@@ -183,7 +185,7 @@ window.DT_CHARACTERS["druid"] = {
   cardUpgrades:        CARD_UPGRADES,
   cards:               CARDS,
   faces:               FACES,
-  fxKeywords:          [["Shape Shift","#3A9C5C"],["Regenerate","#289048"],["Bear form","#8C5A1E"],["Druid form","#4890E0"]],
+  fxKeywords:          [["Shape Shift","#E08030"],["Regenerate","#289048"],["Bear Form","#D8C020"],["Druid Form","#4890E0"],["Wound","#E060A0"]],
   dieIcon:             dieIcon,
   renderTokens:        renderTokens,
   initTokenState:      initTokenState,
