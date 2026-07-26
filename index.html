@@ -30,7 +30,7 @@ button{font-family:inherit;cursor:pointer}
 #right-panel{position:fixed;top:0;right:0;width:var(--panel-w);height:100vh;background:#07101E;border-left:1px solid var(--bdr);z-index:15;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:8px 0;overflow:hidden;pointer-events:auto}
 /* Dice rows at top/bottom of play space */
 /* ── Dice Hand zones (top/bottom of play space) ── */
-.ps-hand-zone{width:100%;display:flex;flex-direction:column;gap:5px;padding:7px 10px;flex-shrink:0;border:1px solid var(--bdrhi);border-left:none;border-right:none;background:#07101E;position:relative}
+.ps-hand-zone{width:100%;display:flex;flex-direction:column;gap:5px;padding:7px 10px;flex-shrink:0;background:#07101E;position:relative}
 /* P1 (bottom zone): dice nearest the outer edge → dice row on top of the zone,
    then HP/CP, then tokens nearest the tray. P2 (top zone) mirrors it. */
 #p1hand-zone{flex-direction:column}
@@ -932,19 +932,20 @@ function toggleLayoutEdit(skipRevert){
   saveBtn.style.display=layoutEditing?"":"none";
   copyBtn.style.display=layoutEditing?"":"none";
   resetBtn.style.display=layoutEditing?"":"none";
-  ["p1hand-zone","p2hand-zone"].forEach(zid=>{
-    const zone=document.getElementById(zid);if(!zone)return;
-    if(layoutEditing){
-      // Lock the zone's current on-screen height BEFORE any child becomes
-      // position:absolute — otherwise the zone (which is only as tall as its
-      // in-flow flex children) collapses the instant those children are
-      // pulled out of flow, and the whole play space jumps around.
-      if(!zone.dataset.lockedH){
-        zone.dataset.lockedH=zone.getBoundingClientRect().height+"px";
-        zone.style.height=zone.dataset.lockedH;
-      }
-    }
-  });
+  // Lock BOTH hand-zones to the SAME height (P1's) so fractional positions
+  // mean the exact same thing on both sides. Locking each zone to its own
+  // independently-measured height (the old approach) could let P1 and P2
+  // drift to slightly different heights depending on exactly when each got
+  // locked, which threw off the mirrored positions on P2's side.
+  const p1zone=document.getElementById("p1hand-zone");
+  if(layoutEditing&&p1zone&&!p1zone.dataset.lockedH){
+    const h=p1zone.getBoundingClientRect().height+"px";
+    ["p1hand-zone","p2hand-zone"].forEach(zid=>{
+      const zone=document.getElementById(zid);if(!zone)return;
+      zone.dataset.lockedH=h;
+      zone.style.height=h;
+    });
+  }
   LAYOUT_OBJS.forEach(obj=>{
     const el=layoutObjEl("p1",obj);
     if(!el)return;
@@ -1107,17 +1108,23 @@ function copyLayoutValues(){
 // mirror each other via flex-direction.
 function applyLayout(data){
   if(!data)return;
+  const p1zone=document.getElementById("p1hand-zone");
+  const p2zone=document.getElementById("p2hand-zone");
+  if(!p1zone||!p2zone)return;
+  // Lock BOTH hand-zones to the SAME height (P1's) so a given fraction means
+  // the exact same physical position on both sides. Locking each zone to its
+  // own independently-measured height could let P1 and P2 drift to slightly
+  // different heights, which is what was throwing off P2's mirrored layout.
+  if(!p1zone.dataset.lockedH){
+    const h=p1zone.getBoundingClientRect().height+"px";
+    p1zone.dataset.lockedH=h;p1zone.style.height=h;
+    p2zone.dataset.lockedH=h;p2zone.style.height=h;
+  }
+  const zr=p1zone.getBoundingClientRect(); // shared reference rect for both players
   ["p1","p2"].forEach(player=>{
-    const zone=document.getElementById(player+"hand-zone");
-    if(zone&&!zone.dataset.lockedH){
-      zone.dataset.lockedH=zone.getBoundingClientRect().height+"px";
-      zone.style.height=zone.dataset.lockedH;
-    }
     LAYOUT_OBJS.forEach(obj=>{
       const el=layoutObjEl(player,obj);if(!el)return;
       const d=data[obj];if(!d)return;
-      const zone=el.closest(".ps-hand-zone");if(!zone)return;
-      const zr=zone.getBoundingClientRect();
       // Clamp to sane bounds — guards against stale/corrupted values from
       // an earlier bug (e.g. a runaway resize) so a bad old save self-heals
       // instead of rendering a giant or off-screen box.
