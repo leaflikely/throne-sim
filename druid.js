@@ -67,8 +67,21 @@ const ABIL2={};
 const CARD_UPGRADES={};
 
 // ─── CARDS ───────────────────────────────────────────────────────────────────
-// No unique cards yet — Druid uses only the shared global cards for now.
-const CARDS=[];
+// Druid's unique cards. (Board upgrades to be added later.) These mix in with
+// the shared global cards below.
+const CARDS=[
+  {id:"d_hibernate", n:"HIBERNATE!",           cp:2,t:"blue",  e:"🐻💤",x:"Transform into Bear Form if not.<br>Gain Regenerate."},
+  {id:"d_pounce",    n:"READY TO POUNCE!",      cp:2,t:"blue",  e:"🐆⚡",x:"Transform into Cat Form if not.<br>Inflict Wound on a player."},
+  {id:"d_rest",      n:"NATURE'S REST!",        cp:2,t:"blue",  e:"🌿🛌",x:"Return to Druid Form if not.<br>Draw 1."},
+  {id:"d_lure",      n:"FEY LURE!",             cp:1,t:"blue",  e:"🧚🌸",x:"Give a player 1 Regenerate."},
+  {id:"d_strength",  n:"STRENGTH OF THE WOODS", cp:1,t:"blue",  e:"🌳💪",x:"If in Druid Form, roll 1:<br>On Claw, 2 Undefendable.<br>On Paw, gain Shape Shift.<br>On Nature, Heal 3."},
+  {id:"d_cycle",     n:"NATURE'S CYCLE",        cp:0,t:"blue",  e:"🔄🌿",x:"Flip a Regen1 token back to Regen2."},
+  {id:"d_surprise",  n:"SURPRISE BITE!",        cp:2,t:"orange",e:"🐱🦷",x:"If in Cat Form, attack becomes Undefendable."},
+  {id:"d_lethal",    n:"LETHAL SWIPE",          cp:2,t:"orange",e:"🐾💥",x:"If in Cat Form, roll 5:<br>1 Blockable X Claw dmg.<br>On Paw Paw, inflict Wound."},
+  {id:"d_shrug",     n:"SHRUG OFF",             cp:0,t:"orange",e:"🐻🛡",x:"Play only after being attacked.<br>If in Bear Form, prevent 2 dmg."},
+  {id:"d_poke",      n:"DON'T POKE THE BEAR!",  cp:0,t:"orange",e:"🐻😡",x:"Play only after being attacked.<br>If in Bear Form, 2 Undefendable."},
+  {id:"d_morph",     n:"QUICK MORPH",           cp:2,t:"red",   e:"✨🔀",x:"Gain Shape Shift."},
+];
 
 const GLOBAL_CARDS=[
   {id:"g_g1", n:"GET THAT OUTTA HERE!", cp:1,t:"blue",  e:"🚫⭐",x:"Remove a status effect token from a chosen player."},
@@ -201,17 +214,16 @@ function placeDruidTokens(player) {
     baseY = r.top + r.height / 2 - 16;
   }
 
-  // Row 1: Wound tokens
+  // Row 1: Wound tokens (larger circle now that the WOUND word is gone)
   for (let i = 0; i < 2; i++) {
     const id = "wound_" + player + "_" + i;
     if (document.getElementById(id)) continue;
     const el = document.createElement("div");
     el.style.cssText = "display:flex;flex-direction:column;align-items:center;gap:1px";
     el.innerHTML =
-      '<span style="font-size:6px;font-weight:700;letter-spacing:1px;color:#E060A0">WOUND</span>'
-      + '<svg width="26" height="24" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" fill="#E060A033" stroke="#E060A0" stroke-width="2.2"/><path d="M8 8 L16 16 M16 8 L8 16" stroke="#E060A0" stroke-width="2.2" stroke-linecap="round"/></svg>'
+      '<svg width="36" height="36" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="#E060A033" stroke="#E060A0" stroke-width="2"/><path d="M8 8 L16 16 M16 8 L8 16" stroke="#E060A0" stroke-width="2.2" stroke-linecap="round"/></svg>'
       + '<span style="font-size:6px;color:' + pColor + ';font-weight:700;letter-spacing:1px">' + pLabel + '</span>';
-    window.addOverlayToken(id, el, baseX + i * 34, baseY);
+    window.addOverlayToken(id, el, baseX + i * 42, baseY);
   }
 
   // Row 2: Regen tokens (underneath the wound row), flippable 2 <-> 1
@@ -228,9 +240,8 @@ function placeDruidTokens(player) {
       const fill = dark ? "#1E683055" : "#5FBF6A44";
       const num  = dark ? "2" : "1";
       el.innerHTML =
-        '<span style="font-size:6px;font-weight:700;letter-spacing:1px;color:#289048">REGEN</span>'
-        + '<svg width="26" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="' + fill + '" stroke="' + ring + '" stroke-width="2.2"/>'
-        + '<text x="12" y="16" text-anchor="middle" font-size="11" font-weight="700" fill="' + ring + '">' + num + '</text></svg>'
+        '<svg width="36" height="36" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="' + fill + '" stroke="' + ring + '" stroke-width="2"/>'
+        + '<text x="12" y="16.5" text-anchor="middle" font-size="12" font-weight="700" fill="' + ring + '">' + num + '</text></svg>'
         + '<span style="font-size:6px;color:' + pColor + ';font-weight:700;letter-spacing:1px">' + pLabel + '</span>';
     };
     draw();
@@ -246,7 +257,7 @@ function placeDruidTokens(player) {
       if (window.netOvState) window.netOvState(id, el.dataset.side);
     });
 
-    window.addOverlayToken(id, el, baseX + i * 34, baseY + 40);
+    window.addOverlayToken(id, el, baseX + i * 42, baseY + 48);
   }
 }
 
