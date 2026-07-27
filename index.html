@@ -195,11 +195,11 @@ button{font-family:inherit;cursor:pointer}
 .dico{pointer-events:none}
 .dv{position:absolute;top:3px;right:4px;font-size:9px;font-weight:700}
 .sg{display:flex;flex-direction:column;align-items:center;gap:2px}
-.slbl{font-size:14px;color:#CDD8E4;letter-spacing:2px;font-weight:800}
-.svr{display:flex;align-items:center;gap:4px}
-.sbtn{width:34px;height:34px;background:#060910;border:1px solid var(--bdr);border-radius:5px;color:var(--txtd);font-size:24px;display:flex;align-items:center;justify-content:center;padding:0;line-height:1}
+.slbl{font-size:11px;color:#CDD8E4;letter-spacing:1.5px;font-weight:800}
+.svr{display:flex;align-items:center;gap:3px}
+.sbtn{width:26px;height:26px;background:#060910;border:1px solid var(--bdr);border-radius:4px;color:var(--txtd);font-size:18px;display:flex;align-items:center;justify-content:center;padding:0;line-height:1}
 .sbtn:hover{color:var(--txt);border-color:var(--bdrhi)}
-.sval{min-width:64px;text-align:center;font-size:44px;font-weight:700;cursor:text}
+.sval{min-width:48px;text-align:center;font-size:33px;font-weight:700;cursor:text}
 .sep{width:1px;height:44px;background:var(--bdr);flex-shrink:0}
 .tok-cluster{display:flex;flex-direction:column;align-items:flex-start;gap:2px;flex-shrink:0}
 .tok-cluster-lbl{font-size:6px;color:var(--txtd);font-weight:700;letter-spacing:1px}
@@ -1287,7 +1287,7 @@ function resetLayout(){
 // look good. Used whenever this browser has no saved layout of its own yet
 // (a fresh install, or after Reset Layout).
 const DEFAULT_LAYOUT={
-  "stats":{"xf":0.586,"yf":0.032,"wf":0.401,"hf":0.241,"scale":1.127},
+  "stats":{"xf":0.555,"yf":0.048,"wf":0.401,"hf":0.241,"scale":1},
   "leaflet":{"xf":0.874,"yf":0.86,"wf":0.116,"hf":0.102,"scale":1},
   "discard":{"xf":0.009,"yf":0.579,"wf":0.118,"hf":0.404,"scale":1.526},
   "all":{"xf":0.137,"yf":0.572,"wf":0.099,"hf":0.149,"scale":1.314},
@@ -2142,7 +2142,7 @@ function statMax(stat){return stat==="cp"?15:99;}
 function adjStat(p,stat,delta){S[p][stat]=Math.max(0,Math.min(statMax(stat),S[p][stat]+delta));document.getElementById(p+stat).textContent=S[p][stat];netSendStat(p,stat);}
 function editStat(el,p,stat){
   const inp=document.createElement("input");inp.type="number";inp.value=S[p][stat];
-  inp.style.cssText="width:80px;text-align:center;background:var(--surf);border:1px solid var(--teal);border-radius:5px;color:var(--txtb);font-size:36px;font-weight:700;outline:none";
+  inp.style.cssText="width:60px;text-align:center;background:var(--surf);border:1px solid var(--teal);border-radius:5px;color:var(--txtb);font-size:27px;font-weight:700;outline:none";
   el.parentNode.replaceChild(inp,el);inp.focus();inp.select();
   const commit=()=>{const v=parseInt(inp.value);if(!isNaN(v))S[p][stat]=Math.max(0,Math.min(statMax(stat),v));const s=document.createElement("span");s.className="sval";s.style.color=stat==="hp"?"var(--hp)":"var(--gold)";s.id=p+stat;s.onclick=function(){editStat(this,p,stat);};s.textContent=S[p][stat];inp.parentNode.replaceChild(s,inp);netSendStat(p,stat);};
   inp.addEventListener("blur",commit);inp.addEventListener("keydown",e=>{if(e.key==="Enter")inp.blur();});
