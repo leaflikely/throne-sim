@@ -194,12 +194,12 @@ button{font-family:inherit;cursor:pointer}
 .die.lk{opacity:.5;background:#070B14}
 .dico{pointer-events:none}
 .dv{position:absolute;top:3px;right:4px;font-size:9px;font-weight:700}
-.sg{display:flex;flex-direction:column;align-items:center;gap:1px}
-.slbl{font-size:7px;color:#CDD8E4;letter-spacing:2px;font-weight:800}
-.svr{display:flex;align-items:center;gap:2px}
-.sbtn{width:18px;height:18px;background:#060910;border:1px solid var(--bdr);border-radius:3px;color:var(--txtd);font-size:14px;display:flex;align-items:center;justify-content:center;padding:0;line-height:1}
+.sg{display:flex;flex-direction:column;align-items:center;gap:2px}
+.slbl{font-size:14px;color:#CDD8E4;letter-spacing:2px;font-weight:800}
+.svr{display:flex;align-items:center;gap:4px}
+.sbtn{width:34px;height:34px;background:#060910;border:1px solid var(--bdr);border-radius:5px;color:var(--txtd);font-size:24px;display:flex;align-items:center;justify-content:center;padding:0;line-height:1}
 .sbtn:hover{color:var(--txt);border-color:var(--bdrhi)}
-.sval{min-width:36px;text-align:center;font-size:22px;font-weight:700;cursor:text}
+.sval{min-width:64px;text-align:center;font-size:44px;font-weight:700;cursor:text}
 .sep{width:1px;height:44px;background:var(--bdr);flex-shrink:0}
 .tok-cluster{display:flex;flex-direction:column;align-items:flex-start;gap:2px;flex-shrink:0}
 .tok-cluster-lbl{font-size:6px;color:var(--txtd);font-weight:700;letter-spacing:1px}
@@ -2142,7 +2142,7 @@ function statMax(stat){return stat==="cp"?15:99;}
 function adjStat(p,stat,delta){S[p][stat]=Math.max(0,Math.min(statMax(stat),S[p][stat]+delta));document.getElementById(p+stat).textContent=S[p][stat];netSendStat(p,stat);}
 function editStat(el,p,stat){
   const inp=document.createElement("input");inp.type="number";inp.value=S[p][stat];
-  inp.style.cssText="width:44px;text-align:center;background:var(--surf);border:1px solid var(--teal);border-radius:4px;color:var(--txtb);font-size:20px;font-weight:700;outline:none";
+  inp.style.cssText="width:80px;text-align:center;background:var(--surf);border:1px solid var(--teal);border-radius:5px;color:var(--txtb);font-size:36px;font-weight:700;outline:none";
   el.parentNode.replaceChild(inp,el);inp.focus();inp.select();
   const commit=()=>{const v=parseInt(inp.value);if(!isNaN(v))S[p][stat]=Math.max(0,Math.min(statMax(stat),v));const s=document.createElement("span");s.className="sval";s.style.color=stat==="hp"?"var(--hp)":"var(--gold)";s.id=p+stat;s.onclick=function(){editStat(this,p,stat);};s.textContent=S[p][stat];inp.parentNode.replaceChild(s,inp);netSendStat(p,stat);};
   inp.addEventListener("blur",commit);inp.addEventListener("keydown",e=>{if(e.key==="Enter")inp.blur();});
