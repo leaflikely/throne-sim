@@ -25,7 +25,7 @@ const FACES=[null,
   {t:"FLAME", c:"#E07028"},
   {t:"FLAME", c:"#E07028"},
   {t:"BLAZE", c:"#C83820"},
-  {t:"SOUL",  c:"#E8A030"},
+  {t:"SOUL",  c:"#3888E0"},
   {t:"METEOR",c:"#A04830"},
 ];
 
@@ -284,7 +284,7 @@ function placePyroTokens(player) {
 
   const tokenSVG = (ring, fill, emoji) =>
     '<svg width="36" height="36" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="' + fill + '" stroke="' + ring + '" stroke-width="2"/>'
-    + '<text x="12" y="16.3" text-anchor="middle" font-size="11">' + emoji + '</text></svg>';
+    + '<text x="12" y="16.3" text-anchor="middle" font-size="12" fill="#000000">' + emoji + '</text></svg>';
 
   let el = mk("pyro_sleep_" + player, tokenSVG("#E8D040", "#E8D04033", "😴"), "Stun");
   if (el) window.addOverlayToken("pyro_sleep_" + player, el, baseX, baseY);
