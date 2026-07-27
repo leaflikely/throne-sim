@@ -62,7 +62,7 @@ const ABIL=[
    }},
   {id:"haul",   n:"A GOOD HAUL", c:"#28A050",t:"off",haulSlot:true,
    req:[{type:"pickaxe",count:1},{type:"hammer",count:1},{type:"anvil",count:2}],
-   fx:"Mine your deck.\nYou may reveal any number of ORE mined this way and place them on THE FORGE.\n8 Blockable"},
+   fx:"Mine your deck.\nYou may reveal any number of ORE mined this way and place them on THE FORGE. 8 Blockable"},
   {id:"smelt",  n:"SMELTING TIME",c:"#8040C8",t:"off",
    req:[{type:"anvil",count:4}],
    fx:"Draw 1 · 9 Undefendable"},
@@ -71,7 +71,7 @@ const ABIL=[
    fx:"On {P}, Mine your deck.\nOn {H}, double the effect of one Armor.\nOn {A}, double the effect of up to two different Armor."},
   {id:"ult",    n:"FINAL TOUCHES!",c:"#906808",t:"ult",ultDice:5,pairWith:"smelt",searchSlot:true,rowGrow:1.5,
    req:[{type:"anvil",count:5}],hideReq:true,
-   fx:"Search your deck for any one ORE.\nPlace it on THE FORGE.\n14 Undefendable"},
+   fx:"Search your deck for any one ORE.\nPlace it on THE FORGE. 14 Undefendable"},
 ];
 
 // Forgemaster's abilities never upgrade — both maps stay empty.
