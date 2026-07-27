@@ -32,9 +32,8 @@ const FACES=[null,
 // ─── ABILITIES ───────────────────────────────────────────────────────────────
 // Board order: fireball, pyroblast, burning soul, combustion, hot streak,
 // ignite, meteorite (7 offensive abilities fill cols 1-7), then molten armor
-// (def) takes col 8 alone, and scorch the earth (ult) pairs with meteorite's
-// column instead (def row 1 + ult row 2 would otherwise collide with a 7th
-// offensive ability at col 8).
+// (def, top) and scorch the earth (ult, bottom) share col 8 — the board's
+// default pairing whenever the ult doesn't declare pairWith.
 const ABIL=[
   {id:"fireball",n:"FIREBALL",c:"#E07028",t:"off",
    req:[{type:"flame",count:3}],hideReq:true,
@@ -60,7 +59,7 @@ const ABIL=[
   {id:"molten",n:"MOLTEN ARMOR",c:"#1E6830",t:"def",defDice:5,
    req:[],
    fx:"Gain 1 Fire Mastery X {S}.\nDeal 1 Undefendable X {F}."},
-  {id:"scorch",n:"SCORCH THE EARTH!",c:"#906808",t:"ult",ultDice:5,pairWith:"meteorite",rowGrow:1.5,
+  {id:"scorch",n:"SCORCH THE EARTH!",c:"#906808",t:"ult",ultDice:5,rowGrow:1.5,
    req:[{type:"meteor",count:5}],hideReq:true,
    fx:"Gain 3 Fire Mastery. Inflict Knockdown and Burn.\n14 Undefendable."},
 ];
