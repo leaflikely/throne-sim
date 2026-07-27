@@ -626,14 +626,41 @@ function cardStyle(c){
 }
 // Whether a card shows a CP badge. Ore cards have NO cp cost (not even 0).
 function cardHasCP(c){return !c.noCP;}
-// Build the CP badge HTML (or empty string if the card has no cost)
-function cpBadge(c,st){
-  if(!cardHasCP(c))return "";
-  return `<span class="hccp" style="color:${st.lbl};border-color:${st.bdr}">${c.cp}CP</span>`;
+// Effective CP cost of a card for a given player. Level-3 upgrade cards are
+// discounted by the CP cost of the matching level-2 upgrade if that level 2
+// is currently placed on the ability slot (you only pay the difference).
+function effCP(player,c){
+  if(!player||c.upgLevel!==3)return c.cp;
+  const char=S.chars[player];
+  if(!char||!char.cardUpgrades)return c.cp;
+  const abilId=char.cardUpgrades[c.id];
+  const placed=abilId&&S.upgrades[player]&&S.upgrades[player][abilId];
+  if(!placed)return c.cp;
+  const placedCard=char.cards.find(k=>k.id===placed._cardId);
+  if(placedCard&&placedCard.upgLevel===2)return Math.max(0,c.cp-placedCard.cp);
+  return c.cp;
 }
-function cpBadgeOv(c,st){
+// Build the CP badge HTML (or empty string if the card has no cost).
+// Pass the owning player so level-3 discounts can be shown live.
+function cpBadge(c,st,player){
   if(!cardHasCP(c))return "";
-  return `<span class="card-ov-cp" style="color:${st.lbl};border-color:${st.bdr}">${c.cp}CP</span>`;
+  return `<span class="hccp" style="color:${st.lbl};border-color:${st.bdr}">${effCP(player,c)}CP</span>`;
+}
+function cpBadgeOv(c,st,player){
+  if(!cardHasCP(c))return "";
+  return `<span class="card-ov-cp" style="color:${st.lbl};border-color:${st.bdr}">${effCP(player,c)}CP</span>`;
+}
+// Refresh the CP number on every face-up board card for a player (called when
+// upgrades change, since that can change level-3 discounts).
+function refreshCardOvCP(player){
+  const char=S.chars[player];if(!char)return;
+  Object.keys(CARD_OV).forEach(id=>{
+    const co=CARD_OV[id];
+    if(co.player!==player)return;
+    const c=char.cards.find(k=>k.id===co.cid);if(!c)return;
+    const badge=co.el.querySelector(".card-ov-cp");
+    if(badge)badge.textContent=effCP(player,c)+"CP";
+  });
 }
 
 // ─── STATE ───────────────────────────────────────────────────────────────────
@@ -759,7 +786,7 @@ function liftCardFromHand(player,cid,startX,startY){
   const el=document.createElement("div");
   el.className="card-ov ov-tok";
   el.style.cssText=`background:${st.bg};border-color:${st.bdr}`;
-  el.innerHTML=`<span class="card-ov-n" style="color:${st.lbl}">${splitCardName(c.n)}</span><span class="card-ov-art">${c.e||"🃏"}</span>${cpBadgeOv(c,st)}`;
+  el.innerHTML=`<span class="card-ov-n" style="color:${st.lbl}">${splitCardName(c.n)}</span><span class="card-ov-art">${c.e||"🃏"}</span>${cpBadgeOv(c,st,player)}`;
   el.dataset.cid=cid;el.dataset.player=player;
 
   const ov=document.getElementById("overlay");
@@ -830,10 +857,21 @@ function getSnapTarget(cid,player,mx,my){
   const upgAbilId=cardUpgrades[cid];
   if(upgAbilId){
     const cell=document.querySelector("#"+player+"grid .ac[data-abilid='"+upgAbilId+"']");
-    if(cell&&!S.upgrades[player][upgAbilId]){
-      const cr=cell.getBoundingClientRect();
-      if(mx>=cr.left&&mx<=cr.right&&my>=cr.top&&my<=cr.bottom)
-        return{type:"upgrade",player,abilId:upgAbilId,cell};
+    if(cell){
+      // Free slot: always droppable. Occupied slot: droppable only if the
+      // incoming card is a higher level than the placed one (3 over 2).
+      const placed=S.upgrades[player][upgAbilId];
+      let droppable=!placed;
+      if(placed){
+        const incoming=char.cards.find(k=>k.id===cid);
+        const placedCard=char.cards.find(k=>k.id===placed._cardId);
+        droppable=!!(incoming&&placedCard&&(incoming.upgLevel||0)>(placedCard.upgLevel||0));
+      }
+      if(droppable){
+        const cr=cell.getBoundingClientRect();
+        if(mx>=cr.left&&mx<=cr.right&&my>=cr.top&&my<=cr.bottom)
+          return{type:"upgrade",player,abilId:upgAbilId,cell};
+      }
     }
   }
 
@@ -2081,7 +2119,7 @@ function renderHands(){
       return`<div class="hcard" data-cid="${id}" data-player="${p}" style="background:${st.bg};border-color:${st.bdr};cursor:grab">\
 <span class="hcn" style="color:${st.lbl}">${splitCardName(c.n)}</span>\
 <span class="hcart">${c.e||"🃏"}</span>\
-${cpBadge(c,st)}</div>`;
+${cpBadge(c,st,p)}</div>`;
     }).join("");
   });
 }
@@ -2143,7 +2181,7 @@ function openPileViewer(p,source){
       }else{
         card.className="hcard";
         card.style.cssText=`background:${st.bg};border-color:${st.bdr};cursor:grab;width:116px;height:100px;flex-shrink:0`;
-        card.innerHTML=`<span class="hcn" style="color:${st.lbl}">${splitCardName(c.n)}</span><span class="hcart">${c.e||"🃏"}</span>${cpBadge(c,st)}`;
+        card.innerHTML=`<span class="hcn" style="color:${st.lbl}">${splitCardName(c.n)}</span><span class="hcart">${c.e||"🃏"}</span>${cpBadge(c,st,p)}`;
         card.addEventListener("mousedown",e=>{
           if(e.button!==0)return;
           e.preventDefault();e.stopPropagation();
@@ -2192,7 +2230,7 @@ function liftCardFromPile(player,cid,source,mx,my){
   const el=document.createElement("div");
   el.className="card-ov ov-tok";
   el.style.cssText=`background:${st.bg};border-color:${st.bdr};position:absolute;left:${startX}px;top:${startY}px`;
-  el.innerHTML=`<span class="card-ov-n" style="color:${st.lbl}">${splitCardName(c.n)}</span><span class="card-ov-art">${c.e||"🃏"}</span>${cpBadgeOv(c,st)}`;
+  el.innerHTML=`<span class="card-ov-n" style="color:${st.lbl}">${splitCardName(c.n)}</span><span class="card-ov-art">${c.e||"🃏"}</span>${cpBadgeOv(c,st,player)}`;
   el.dataset.cid=cid;el.dataset.player=player;el.id=id;
   document.getElementById("overlay").appendChild(el);
   CARD_OV[id]={el,cid,player,x:startX,y:startY};
@@ -2510,12 +2548,41 @@ document.addEventListener("keydown",e=>{
   else if(open&&e.key==="ArrowLeft")leafletStep(-1);
   else if(open&&e.key==="ArrowRight")leafletStep(1);
 });
+// Resolve an upgrade definition: per-card defs (char.upgrades keyed by card
+// id, used by multi-level characters like Pyromancer) win over per-ability
+// defs (keyed by ability id, the original single-level scheme).
+function resolveUpgradeDef(char,cardId,abilId){
+  return char.upgrades[cardId]||char.upgrades[abilId]||null;
+}
 function applyUpgrade(player,cardId,abilId){
-  const char=S.chars[player];if(!char||S.upgrades[player][abilId])return;
-  S.upgrades[player][abilId]={...char.upgrades[abilId],_cardId:cardId};
+  const char=S.chars[player];if(!char)return;
+  const def=resolveUpgradeDef(char,cardId,abilId);if(!def)return;
+  const existing=S.upgrades[player][abilId];
+  if(existing){
+    // Only a strictly higher-level card may replace a placed upgrade
+    const incoming=char.cards.find(k=>k.id===cardId);
+    const placedCard=char.cards.find(k=>k.id===existing._cardId);
+    if(!incoming||!placedCard||(incoming.upgLevel||0)<=(placedCard.upgLevel||0))return;
+    // Eject the old upgrade card back onto the board next to the slot
+    const oldCardId=existing._cardId;
+    const cell=document.querySelector("#"+player+"grid .ac[data-abilid='"+abilId+"']");
+    let ejX=window.innerWidth/2-58,ejY=window.innerHeight/2-63;
+    if(cell){const r=cell.getBoundingClientRect();ejX=r.left;ejY=r.top;}
+    const oldOvId="cov_"+player+"_"+oldCardId.replace(/[^a-z0-9]/gi,"_");
+    const oldCo=CARD_OV[oldOvId];
+    if(oldCo){
+      oldCo.el.style.display="";
+      oldCo.x=ejX;oldCo.y=ejY;
+      oldCo.el.style.left=ejX+"px";oldCo.el.style.top=ejY+"px";
+    }else{
+      makeBoardCard(player,oldCardId,oldOvId,ejX,ejY,true);
+    }
+  }
+  S.upgrades[player][abilId]={...def,_cardId:cardId};
   buildGrid(player+"grid",player);
   autoSizeAbilCards();
   updateAvailableAbils(player);
+  renderHands();refreshCardOvCP(player);
   document.querySelectorAll("#"+player+"grid .ac[data-abilid='"+abilId+"']").forEach(c=>{c.classList.add("flash");setTimeout(()=>c.classList.remove("flash"),500);});
 }
 
@@ -2526,7 +2593,7 @@ function revertUpgradeByCard(player,cardId){
     const upg=S.upgrades[player][abilId];
     if(upg&&upg._cardId===cardId){delete S.upgrades[player][abilId];reverted=true;}
   });
-  if(reverted){buildGrid(player+"grid",player);autoSizeAbilCards();}
+  if(reverted){buildGrid(player+"grid",player);autoSizeAbilCards();renderHands();refreshCardOvCP(player);}
   // The overlay card for this cardId is already the one being dragged (visible),
   // so no need to un-hide — it was hidden only when parked under an upgrade.
 }
@@ -2550,6 +2617,7 @@ function pullUpgradeCard(player,abilId){
   buildGrid(player+"grid",player);
   autoSizeAbilCards();
   updateAvailableAbils(player);
+  renderHands();refreshCardOvCP(player);
 
   // Find the hidden overlay card and restore it
   const ovId="cov_"+player+"_"+cardId.replace(/[^a-z0-9]/gi,"_");
@@ -2842,7 +2910,7 @@ function applyLocalSave(d){
   P.hand=(d.hand||[]).slice();P.deck=(d.deck||[]).slice();P.discard=(d.discard||[]).slice();
   P.forge=(d.forge||[]).slice();
   S.upgrades[me]={};
-  Object.keys(d.upg||{}).forEach(a=>{if(char.upgrades[a])S.upgrades[me][a]={...char.upgrades[a],_cardId:d.upg[a]};});
+  Object.keys(d.upg||{}).forEach(a=>{const def=resolveUpgradeDef(char,d.upg[a],a);if(def)S.upgrades[me][a]={...def,_cardId:d.upg[a]};});
   (d.board||[]).forEach(b=>makeBoardCard(me,b.cid,b.id,Math.round(b.rx*window.innerWidth),Math.round(b.ry*window.innerHeight),true));
   buildGrid(me+"grid",me);autoSizeAbilCards();
   renderDice(me);renderTokens(me);renderFormWidget(me);renderHands();updateDrawBtn(me);updateDiscardDisplay(me);updateForgeDisplay(me);updateAvailableAbils(me);
@@ -2914,7 +2982,10 @@ function applyRemoteCards(d){
   let gridDirty=false;
   Object.keys(S.upgrades[p]).forEach(a=>{if(!want[a]){delete S.upgrades[p][a];gridDirty=true;}});
   Object.keys(want).forEach(a=>{
-    if(!S.upgrades[p][a]&&char.upgrades[a]){S.upgrades[p][a]={...char.upgrades[a],_cardId:want[a]};gridDirty=true;}
+    const cur=S.upgrades[p][a];
+    if(cur&&cur._cardId===want[a])return; // unchanged
+    const def=resolveUpgradeDef(char,want[a],a);
+    if(def){S.upgrades[p][a]={...def,_cardId:want[a]};gridDirty=true;}
   });
   if(gridDirty){buildGrid(p+"grid",p);autoSizeAbilCards();updateAvailableAbils(p);}
   // Board cards: add / move / remove to match the owner's list
@@ -2944,7 +3015,7 @@ function makeBoardCard(player,cid,id,x,y,withDrag){
   el.style.cssText="background:"+st.bg+";border-color:"+st.bdr+";position:absolute;left:"+x+"px;top:"+y+"px";
   el.innerHTML='<span class="card-ov-n" style="color:'+st.lbl+'">'+splitCardName(c.n)+'</span>'
     +'<span class="card-ov-art">'+(c.e||"🃏")+'</span>'
-    +cpBadgeOv(c,st);
+    +cpBadgeOv(c,st,player);
   el.dataset.cid=cid;el.dataset.player=player;el.id=id;
   document.getElementById("overlay").appendChild(el);
   CARD_OV[id]={el:el,cid:cid,player:player,x:x,y:y};
