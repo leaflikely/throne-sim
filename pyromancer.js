@@ -167,12 +167,83 @@ const GLOBAL_CARDS=[
 GLOBAL_CARDS.forEach(c=>CARDS.push(c));
 
 // ─── TOKENS ──────────────────────────────────────────────────────────────────
-// No unique tokens yet — placeholder empty state so the board loads cleanly.
 function renderTokens(player, playerState, container) {
   container.innerHTML = "";
 }
 function initTokenState() {
   return {};
+}
+
+// ─── FIRE MASTERY COUNTER ────────────────────────────────────────────────────
+// "FIRE MASTERY: MAX X" where X is click-to-type (defaults to 5). A regular
+// +/- counter below it starts at 0 and cannot exceed the max.
+function initFormState() {
+  return { fm: 0, fmMax: 5 };
+}
+
+function renderFormWidget(player, formState, container) {
+  container.innerHTML = "";
+  if (typeof formState.fm !== "number") formState.fm = 0;
+  if (typeof formState.fmMax !== "number") formState.fmMax = 5;
+
+  const wrap = document.createElement("div");
+  wrap.style.cssText = "display:flex;flex-direction:column;gap:3px;align-items:flex-start;pointer-events:auto";
+
+  // "FIRE MASTERY: MAX X" — the X is a click-to-type field
+  const maxRow = document.createElement("div");
+  maxRow.style.cssText = "display:flex;align-items:center;gap:3px;font-size:9px;font-weight:700;letter-spacing:.5px;color:#E8A030";
+  const maxLbl = document.createElement("span");
+  maxLbl.textContent = "FIRE MASTERY: MAX ";
+  maxRow.appendChild(maxLbl);
+  const maxVal = document.createElement("span");
+  maxVal.textContent = formState.fmMax;
+  maxVal.style.cssText = "cursor:pointer;text-decoration:underline dotted;text-underline-offset:2px";
+  maxVal.title = "Click to set the Fire Mastery max";
+  maxVal.addEventListener("click", () => {
+    if (window.netCanEdit && !window.netCanEdit(player)) return;
+    const inp = document.createElement("input");
+    inp.type = "number";
+    inp.value = formState.fmMax;
+    inp.style.cssText = "width:32px;font-size:9px;font-weight:700;background:var(--surf);border:1px solid #E8A030;border-radius:3px;color:#E8A030;text-align:center;outline:none";
+    maxRow.replaceChild(inp, maxVal);
+    inp.focus(); inp.select();
+    const commit = () => {
+      const v = parseInt(inp.value);
+      if (!isNaN(v) && v >= 0) formState.fmMax = v;
+      formState.fm = Math.min(formState.fm, formState.fmMax);
+      renderFormWidget(player, formState, container);
+      if (window.netTokens) window.netTokens(player);
+    };
+    inp.addEventListener("blur", commit);
+    inp.addEventListener("keydown", e => { if (e.key === "Enter") inp.blur(); });
+  });
+  maxRow.appendChild(maxVal);
+  wrap.appendChild(maxRow);
+
+  // Regular +/- counter, 0 to fmMax
+  const ctrRow = document.createElement("div");
+  ctrRow.style.cssText = "display:flex;align-items:center;gap:6px";
+  const mkBtn = (label, delta) => {
+    const b = document.createElement("button");
+    b.textContent = label;
+    b.style.cssText = "font-size:11px;font-weight:800;width:18px;height:18px;line-height:1;border-radius:4px;border:1.5px solid #E8A030;background:#E8A03018;color:#E8A030;cursor:pointer";
+    b.addEventListener("click", () => {
+      if (window.netCanEdit && !window.netCanEdit(player)) return;
+      formState.fm = Math.max(0, Math.min(formState.fmMax, formState.fm + delta));
+      renderFormWidget(player, formState, container);
+      if (window.netTokens) window.netTokens(player);
+    });
+    return b;
+  };
+  ctrRow.appendChild(mkBtn("−", -1));
+  const numEl = document.createElement("span");
+  numEl.textContent = formState.fm;
+  numEl.style.cssText = "font-size:15px;font-weight:800;color:#F8C060;min-width:16px;text-align:center";
+  ctrRow.appendChild(numEl);
+  ctrRow.appendChild(mkBtn("+", 1));
+  wrap.appendChild(ctrRow);
+
+  container.appendChild(wrap);
 }
 
 function dieIcon(faceValue, locked, size) {
@@ -182,6 +253,47 @@ function dieIcon(faceValue, locked, size) {
   if (f.t === "BLAZE")  return I.blaze(c, size);
   if (f.t === "SOUL")   return I.soul(c, size);
   return I.meteor(c, size);
+}
+
+// ─── STATUS TOKENS (draggable overlay pieces) ────────────────────────────────
+// One of each: yellow (sleeping face — Stun), red (fire — Burn), blue (spiral —
+// Knockdown/dizzy). Anchored next to the Fire Mastery widget, draggable and
+// net-synced through the shared overlay system, same as the Druid's tokens.
+function buildOverlayTokens(player, addFn, removeFn) {
+  setTimeout(() => placePyroTokens(player), 80);
+}
+
+function placePyroTokens(player) {
+  const anchor = document.getElementById(player + "formwidget");
+
+  let baseX = 420, baseY = window.innerHeight / 2;
+  if (anchor) {
+    const r = anchor.getBoundingClientRect();
+    baseX = r.right + 10;
+    baseY = r.top + r.height / 2 - 16;
+  }
+
+  const mk = (id, svg, title) => {
+    if (document.getElementById(id)) return;
+    const el = document.createElement("div");
+    el.style.cssText = "display:flex;flex-direction:column;align-items:center;gap:1px";
+    el.innerHTML = svg;
+    el.title = title;
+    return el;
+  };
+
+  const tokenSVG = (ring, fill, emoji) =>
+    '<svg width="36" height="36" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="' + fill + '" stroke="' + ring + '" stroke-width="2"/>'
+    + '<text x="12" y="16.3" text-anchor="middle" font-size="11">' + emoji + '</text></svg>';
+
+  let el = mk("pyro_sleep_" + player, tokenSVG("#E8D040", "#E8D04033", "😴"), "Stun");
+  if (el) window.addOverlayToken("pyro_sleep_" + player, el, baseX, baseY);
+
+  el = mk("pyro_burn_" + player, tokenSVG("#E04828", "#E0482833", "🔥"), "Burn");
+  if (el) window.addOverlayToken("pyro_burn_" + player, el, baseX + 40, baseY);
+
+  el = mk("pyro_dizzy_" + player, tokenSVG("#4090E0", "#4090E033", "🌀"), "Knockdown");
+  if (el) window.addOverlayToken("pyro_dizzy_" + player, el, baseX + 80, baseY);
 }
 
 // ─── EXPORT ──────────────────────────────────────────────────────────────────
@@ -199,6 +311,10 @@ window.DT_CHARACTERS["pyromancer"] = {
   renderTokens:        renderTokens,
   initTokenState:      initTokenState,
   hasHexTokens:        false,
+  hasFormWidget:       true,
+  renderFormWidget:    renderFormWidget,
+  initFormState:       initFormState,
+  buildOverlayTokens:  buildOverlayTokens,
 };
 
 })();
