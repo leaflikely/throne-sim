@@ -11,8 +11,8 @@ const I={
   flame:(c,s)=>`<svg class="dico" width="${s}" height="${s}" viewBox="0 0 24 24" fill="none"><path d="M12 2 C13 6 17 8 17 13 A5 5 0 0 1 7 13 C7 9 10 7 12 2Z" fill="${c}" fill-opacity="0.3" stroke="${c}" stroke-width="1.8" stroke-linejoin="round"/><path d="M12 10 C12.5 12 14 12.5 14 14.5 A2 2 0 0 1 10 14.5 C10 13 11.5 12 12 10Z" fill="${c}"/></svg>`,
   // Blaze: dark spiky burst (a raging fire)
   blaze:(c,s)=>`<svg class="dico" width="${s}" height="${s}" viewBox="0 0 24 24" fill="none"><path d="M12 2 L14 8 L20 5 L16.5 10.5 L22 12 L16.5 13.5 L20 19 L14 16 L12 22 L10 16 L4 19 L7.5 13.5 L2 12 L7.5 10.5 L4 5 L10 8 Z" fill="${c}" fill-opacity="0.3" stroke="${c}" stroke-width="1.6" stroke-linejoin="round"/><circle cx="12" cy="12" r="3" fill="${c}"/></svg>`,
-  // Soul Flame: flame inside a rounded square (matches the Fire Mastery token art)
-  soul:(c,s)=>`<svg class="dico" width="${s}" height="${s}" viewBox="0 0 24 24" fill="none"><rect x="2.5" y="2.5" width="19" height="19" rx="4.5" fill="${c}" fill-opacity="0.2" stroke="${c}" stroke-width="1.8"/><path d="M12 5.5 C12.7 8.5 15.5 10 15.5 13.5 A3.5 3.5 0 0 1 8.5 13.5 C8.5 10.8 10.8 9.5 12 5.5Z" fill="${c}" fill-opacity="0.5" stroke="${c}" stroke-width="1.4" stroke-linejoin="round"/></svg>`,
+  // Soul Flame: flame silhouette with a small female-person emoji nested inside
+  soul:(c,s)=>`<svg class="dico" width="${s}" height="${s}" viewBox="0 0 24 24" fill="none"><path d="M12 2 C13 6 17 8 17 13 A5 5 0 0 1 7 13 C7 9 10 7 12 2Z" fill="${c}" fill-opacity="0.3" stroke="${c}" stroke-width="1.8" stroke-linejoin="round"/><text x="12" y="15.2" text-anchor="middle" font-size="7" font-family="sans-serif">🚺</text></svg>`,
   // Meteor: comet with impact trail
   meteor:(c,s)=>`<svg class="dico" width="${s}" height="${s}" viewBox="0 0 24 24" fill="none"><path d="M21 3 L11 13" stroke="${c}" stroke-width="2.4" stroke-linecap="round"/><path d="M19 8 L14 13 M16 3 L11 8" stroke="${c}" stroke-width="1.4" stroke-linecap="round" opacity="0.6"/><circle cx="8.5" cy="15.5" r="5.5" fill="${c}" fill-opacity="0.35" stroke="${c}" stroke-width="1.9"/></svg>`,
 };
@@ -30,14 +30,18 @@ const FACES=[null,
 ];
 
 // ─── ABILITIES ───────────────────────────────────────────────────────────────
-// Board order: fireball, burning soul, combustion, hot streak, ignite,
-// meteorite (6 offensive abilities fill cols 1-6), then molten armor (def)
-// and scorch the earth (ult) share col 8 — def on top, ult on bottom, which
-// is the board's default pairing whenever the ult doesn't declare pairWith.
+// Board order: fireball, pyroblast, burning soul, combustion, hot streak,
+// ignite, meteorite (7 offensive abilities fill cols 1-7), then molten armor
+// (def) takes col 8 alone, and scorch the earth (ult) pairs with meteorite's
+// column instead (def row 1 + ult row 2 would otherwise collide with a 7th
+// offensive ability at col 8).
 const ABIL=[
   {id:"fireball",n:"FIREBALL",c:"#E07028",t:"off",
    req:[{type:"flame",count:3}],hideReq:true,
    fx:"{F}{F}{F} → 4 Blockable\n{F}{F}{F}{F} → 6 Blockable\n{F}{F}{F}{F}{F} → 8 Blockable\nGain 1 Fire Mastery."},
+  {id:"pyroblast",n:"PYROBLAST",c:"#C83820",t:"off",
+   req:[{type:"flame",count:3},{type:"meteor",count:1}],
+   fx:"6 Blockable and roll 1 die:\nOn {F}, 3 Blockable.\nOn {B}, inflict Burn.\nOn {S}, gain 2 Fire Mastery.\nOn {M}, inflict Knockdown."},
   {id:"burnsoul",n:"BURNING SOUL",c:"#E8A030",t:"off",
    req:[{type:"soul",count:2}],
    fx:"Gain 2 Fire Mastery.\n1 Undefendable X {F}."},
@@ -56,7 +60,7 @@ const ABIL=[
   {id:"molten",n:"MOLTEN ARMOR",c:"#1E6830",t:"def",defDice:5,
    req:[],
    fx:"Gain 1 Fire Mastery X {S}.\nDeal 1 Undefendable X {F}."},
-  {id:"scorch",n:"SCORCH THE EARTH!",c:"#906808",t:"ult",ultDice:5,rowGrow:1.5,
+  {id:"scorch",n:"SCORCH THE EARTH!",c:"#906808",t:"ult",ultDice:5,pairWith:"meteorite",rowGrow:1.5,
    req:[{type:"meteor",count:5}],hideReq:true,
    fx:"Gain 3 Fire Mastery. Inflict Knockdown and Burn.\n14 Undefendable."},
 ];
