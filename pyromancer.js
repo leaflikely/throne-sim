@@ -61,7 +61,7 @@ const ABIL=[
    fx:"Gain 1 Fire Mastery X {S}.\nDeal 1 Undefendable X {F}."},
   {id:"scorch",n:"SCORCH THE EARTH!",c:"#906808",t:"ult",ultDice:5,rowGrow:1.5,
    req:[{type:"meteor",count:5}],hideReq:true,
-   fx:"Gain 3 Fire Mastery. Inflict Knockdown and Burn.\n14 Undefendable."},
+   fx:"Gain 3 Fire Mastery. Inflict Knockdown and Burn. 14 Undefendable."},
 ];
 
 // ─── UPGRADES ────────────────────────────────────────────────────────────────
