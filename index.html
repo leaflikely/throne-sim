@@ -217,9 +217,21 @@ button{font-family:inherit;cursor:pointer}
 /* Forge slot on the forge ability card */
 .forge-box{display:flex;align-items:center;justify-content:center;gap:5px;margin-top:4px;padding-top:4px;border-top:1px solid var(--bdr);flex-shrink:0;width:100%}
 .forge-count{font-size:15px;font-weight:700;color:var(--gold);line-height:1}
+.forge-counts{display:flex;align-items:baseline;gap:6px}
+.forge-count-n{font-size:15px;font-weight:700;line-height:1}
 .forge-lbl{font-size:6px;font-weight:700;letter-spacing:1px;color:var(--txtd)}
 .forge-open{font-size:8px;font-weight:700;padding:2px 7px;border-radius:4px;border:1.5px solid var(--bdrhi);background:transparent;color:var(--txtd);cursor:pointer;letter-spacing:.5px;transition:color .1s,border-color .1s}
 .forge-open:hover{border-color:var(--gold);color:var(--gold)}
+.haul-btn{font-size:8px;font-weight:700;padding:2px 7px;border-radius:4px;border:1.5px solid #28A050;background:#28A05018;color:#28A050;cursor:pointer;letter-spacing:.5px;transition:filter .1s;margin-left:5px;vertical-align:middle}
+.haul-btn:hover{filter:brightness(1.25)}
+/* Selectable ore tiles (Forge OPEN panel, Haul panel) — a checkable ring */
+.mine-card.selectable{cursor:pointer}
+.mine-card.selected{outline:2.5px solid var(--teal);outline-offset:-2.5px}
+.mine-check{position:absolute;top:4px;right:4px;width:15px;height:15px;border-radius:50%;border:1.5px solid var(--bdrhi);background:#0A1424;display:flex;align-items:center;justify-content:center;font-size:9px;color:transparent;pointer-events:none}
+.mine-card.selected .mine-check{border-color:var(--teal);color:var(--teal);background:#00C4A022}
+/* Craft/Scrap confirm sub-panel */
+.confirm-list{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;max-height:40vh;overflow-y:auto}
+.confirm-chip{font-size:9px;font-weight:700;padding:3px 8px;border-radius:4px;border:1.5px solid}
 
 /* Nevermore overlay token */
 .nm-outer{display:flex;flex-direction:column;align-items:center;gap:2px}
@@ -276,10 +288,11 @@ button{font-family:inherit;cursor:pointer}
 .panel-close-btn:hover{border-color:var(--teal);color:var(--teal)}
 #discard-cards{display:flex;flex-wrap:wrap;gap:8px;overflow-y:auto;padding-bottom:4px}
 
-/* ── Mine / Search panels (Forgemaster) ── */
-#mine-panel,#search-panel{display:none;position:fixed;inset:0;z-index:600;background:#000000AA;align-items:center;justify-content:center}
-#mine-panel.open,#search-panel.open{display:flex}
-#mine-box,#search-box{background:#0C1828;border:1.5px solid var(--bdrhi);border-radius:12px;padding:14px 16px;min-width:320px;max-width:80vw;max-height:80vh;display:flex;flex-direction:column;gap:10px;box-shadow:0 8px 40px #000000CC}
+/* ── Mine / Search / Haul panels (Forgemaster) ── */
+#mine-panel,#search-panel,#haul-panel,#forge-confirm-panel{display:none;position:fixed;inset:0;z-index:600;background:#000000AA;align-items:center;justify-content:center}
+#mine-panel.open,#search-panel.open,#haul-panel.open{display:flex}
+#forge-confirm-panel.open{display:flex;z-index:650}
+#mine-box,#search-box,#haul-box{background:#0C1828;border:1.5px solid var(--bdrhi);border-radius:12px;padding:14px 16px;min-width:320px;max-width:80vw;max-height:80vh;display:flex;flex-direction:column;gap:10px;box-shadow:0 8px 40px #000000CC}
 .mine-hdr{display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
 .mine-title{font-size:10px;font-weight:700;letter-spacing:2px;color:var(--txtd)}
 .mine-sub{font-size:9px;color:var(--txtd);margin-top:-4px}
@@ -499,14 +512,35 @@ button{font-family:inherit;cursor:pointer}
   </div>
 </div>
 
-<!-- Discard viewer panel -->
+<!-- Discard viewer panel (also doubles as the Forge viewer, with select+craft/scrap) -->
 <div id="discard-panel">
   <div id="discard-box">
     <div id="discard-box-hdr">
       <span id="discard-box-title">DISCARD PILE</span>
       <button class="panel-close-btn" onclick="closeDiscardPanel()">✕ Close</button>
     </div>
+    <span class="mine-sub" id="forge-select-sub" style="display:none">Click ore to select any number, then Craft or Scrap them.</span>
     <div id="discard-cards"></div>
+    <div class="mine-foot" id="forge-select-foot" style="display:none">
+      <button class="btn" style="border-color:#C02828;color:#E05050" onclick="confirmForgeAction('scrap')">Scrap Selected</button>
+      <button class="btn" style="border-color:#28A050;color:#28A050" onclick="confirmForgeAction('craft')">Craft Selected</button>
+    </div>
+  </div>
+</div>
+
+<!-- Craft/Scrap confirmation -->
+<div id="forge-confirm-panel">
+  <div id="mine-box" style="min-width:300px">
+    <div class="mine-hdr">
+      <span class="mine-title" id="forge-confirm-title">CONFIRM</span>
+      <button class="panel-close-btn" onclick="closeForgeConfirm()">✕ Cancel</button>
+    </div>
+    <span class="mine-sub" id="forge-confirm-sub"></span>
+    <div class="confirm-list" id="forge-confirm-list"></div>
+    <div class="mine-foot">
+      <button class="btn" onclick="closeForgeConfirm()">Cancel</button>
+      <button class="btn btnt" id="forge-confirm-go">Confirm</button>
+    </div>
   </div>
 </div>
 
@@ -521,6 +555,22 @@ button{font-family:inherit;cursor:pointer}
     <div class="mine-cards" id="mine-cards"></div>
     <div class="mine-foot">
       <button class="btn" onclick="revealNoneMine()">Reveal None</button>
+    </div>
+  </div>
+</div>
+
+<!-- Forgemaster: Haul — peek top 3 of deck, take any number of ORE, rest go to bottom -->
+<div id="haul-panel">
+  <div id="haul-box" class="mine-box-shared">
+    <div class="mine-hdr">
+      <span class="mine-title">A GOOD HAUL — TOP 3 CARDS</span>
+      <button class="panel-close-btn" onclick="closeHaulPanel()">✕ Close</button>
+    </div>
+    <span class="mine-sub">Click any number of ORE cards to select them, then place on the Forge. Remaining cards go to the bottom of the deck.</span>
+    <div class="mine-cards" id="haul-cards"></div>
+    <div class="mine-foot">
+      <button class="btn" onclick="revealNoneHaul()">Reveal None</button>
+      <button class="btn btnt" onclick="confirmHaul()">Place Selected On Forge</button>
     </div>
   </div>
 </div>
@@ -599,7 +649,6 @@ const CHAR_ROSTER=[
   {id:"raveness",name:"Raveness",file:"raveness.js"},
   {id:"forgemaster",name:"Forgemaster",file:"forgemaster.js"},
   {id:"druid",name:"Druid",file:"druid.js"},
-  {id:"pyromancer",name:"Pyromancer",file:"pyromancer.js"},
 ];
 
 function loadCharacter(player,charId){
@@ -1324,20 +1373,38 @@ function buildAbilCard(a,ab,upgraded,char,col,row,rowSpan,flexGrow){
   const pullBtn=upgraded
     ?`<button class="pull-btn" title="Pull card back" onclick="event.stopPropagation();pullUpgradeCard('${char._player}','${a.id}')">↩</button>`
     :"";
-  // Forge slot: show an ore counter and an OPEN button to view/retrieve ores
+  // Forge slot: one small digit per ore type (gold/teal/purple) plus an
+  // OPEN button to view/retrieve/craft/scrap ore.
   const forgeHTML=ab.forgeSlot
     ?`<div class="forge-box">
-        <span class="forge-count" id="${char._player}forge-n">0</span>
+        <div class="forge-counts">
+          <span class="forge-count-n" style="color:#E0C020" id="${char._player}forge-n-gold">0</span>
+          <span class="forge-count-n" style="color:#40D0D8" id="${char._player}forge-n-diamond">0</span>
+          <span class="forge-count-n" style="color:#A060E0" id="${char._player}forge-n-ultimanium">0</span>
+        </div>
         <span class="forge-lbl">ORE ON FORGE</span>
         <button class="forge-open" onclick="event.stopPropagation();viewForge('${char._player}')">OPEN</button>
       </div>`
     :"";
-  // Search slot: button to look through the whole deck for one ORE
-  const searchHTML=ab.searchSlot
-    ?`<div class="forge-box">
-        <button class="forge-open" onclick="event.stopPropagation();openSearchPanel('${char._player}')">SEARCH</button>
-      </div>`
+  // Search slot (Final Touches) / Haul slot (A Good Haul): a button placed
+  // inline right after the ability's damage badge (e.g. the "14"/"8" circle)
+  // so it shares that line instead of sitting in its own row below the text.
+  const inlineBtn=ab.searchSlot
+    ?`<button class="forge-open" style="margin-left:5px;vertical-align:middle" onclick="event.stopPropagation();openSearchPanel('${char._player}')">SEARCH</button>`
+    :ab.haulSlot
+    ?`<button class="haul-btn" onclick="event.stopPropagation();openHaulPanel('${char._player}')">HAUL</button>`
     :"";
+  let fxHTML=renderFxHTML(ab.fx,char);
+  if(inlineBtn){
+    // Insert the button right after the last damage badge in the text.
+    const idx=Math.max(fxHTML.lastIndexOf("dmg-udf"),fxHTML.lastIndexOf("dmg-blk"));
+    if(idx>=0){
+      const closeIdx=fxHTML.indexOf("</span>",idx)+"</span>".length;
+      fxHTML=fxHTML.slice(0,closeIdx)+inlineBtn+fxHTML.slice(closeIdx);
+    }else{
+      fxHTML+=inlineBtn;
+    }
+  }
   // Keep the name + badge on ONE line (no wrap) so the badge stays to the right;
   // the name font auto-shrinks later if it risks touching the card edges.
   return`<div class="${cls}" style="border-top-color:${ab.c};${placement}" data-abilid="${a.id}" data-player="${char._player}">
@@ -1345,9 +1412,8 @@ function buildAbilCard(a,ab,upgraded,char,col,row,rowSpan,flexGrow){
       <span class="an" style="color:${ab.c}">${ab.n}</span>${badge}${pullBtn}
     </div>
     ${reqHTML?`<div class="areq">${reqHTML}</div>`:""}
-    <div class="af">${renderFxHTML(ab.fx,char)}</div>
+    <div class="af">${fxHTML}</div>
     ${forgeHTML}
-    ${searchHTML}
   </div>`;
 }
 
@@ -2027,21 +2093,25 @@ ${cpBadge(c,st)}</div>`;
 }
 
 // ─── GAME ACTIONS ─────────────────────────────────────────────────────────────
-function adjStat(p,stat,delta){S[p][stat]=Math.max(0,Math.min(99,S[p][stat]+delta));document.getElementById(p+stat).textContent=S[p][stat];netSendStat(p,stat);}
+function statMax(stat){return stat==="cp"?15:99;}
+function adjStat(p,stat,delta){S[p][stat]=Math.max(0,Math.min(statMax(stat),S[p][stat]+delta));document.getElementById(p+stat).textContent=S[p][stat];netSendStat(p,stat);}
 function editStat(el,p,stat){
   const inp=document.createElement("input");inp.type="number";inp.value=S[p][stat];
   inp.style.cssText="width:44px;text-align:center;background:var(--surf);border:1px solid var(--teal);border-radius:4px;color:var(--txtb);font-size:20px;font-weight:700;outline:none";
   el.parentNode.replaceChild(inp,el);inp.focus();inp.select();
-  const commit=()=>{const v=parseInt(inp.value);if(!isNaN(v))S[p][stat]=Math.max(0,Math.min(99,v));const s=document.createElement("span");s.className="sval";s.style.color=stat==="hp"?"var(--hp)":"var(--gold)";s.id=p+stat;s.onclick=function(){editStat(this,p,stat);};s.textContent=S[p][stat];inp.parentNode.replaceChild(s,inp);netSendStat(p,stat);};
+  const commit=()=>{const v=parseInt(inp.value);if(!isNaN(v))S[p][stat]=Math.max(0,Math.min(statMax(stat),v));const s=document.createElement("span");s.className="sval";s.style.color=stat==="hp"?"var(--hp)":"var(--gold)";s.id=p+stat;s.onclick=function(){editStat(this,p,stat);};s.textContent=S[p][stat];inp.parentNode.replaceChild(s,inp);netSendStat(p,stat);};
   inp.addEventListener("blur",commit);inp.addEventListener("keydown",e=>{if(e.key==="Enter")inp.blur();});
 }
 // rollDice / resetDice / toggleLock removed — replaced by rollTray / resetTray / die drag
 function drawCard(p){if(NET.on&&p!==NET.me)return;const P=S[p];if(!P.deck.length||!S.chars[p])return;P.hand.push(P.deck.shift());updateDrawBtn(p);const inf=document.getElementById(p+"info");if(inf)inf.textContent="Hand:"+P.hand.length;renderHands();netSendCards(p);}
 // ─── CARD PILE VIEWER (discard + forge) ───────────────────────────────────────
 // One panel serves both piles. `source` is "discard" or "forge"; the pile
-// contents live at S[player][source].
+// contents live at S[player][source]. For "forge" the panel switches into
+// select mode: clicking ore toggles selection instead of picking it up, and
+// a Craft/Scrap footer appears to send the selection to the deck or discard.
 let discardPanelPlayer=null;
 let discardPanelSource="discard";
+let forgeSelected=new Set();
 
 function viewDiscard(p){openPileViewer(p,"discard");}
 function viewForge(p){openPileViewer(p,"forge");}
@@ -2051,37 +2121,63 @@ function openPileViewer(p,source){
   if(!char)return;
   const pile=P[source]||[];
   discardPanelPlayer=p;discardPanelSource=source;
+  forgeSelected=new Set();
   const panel=document.getElementById("discard-panel");
   const title=document.getElementById("discard-box-title");
   const cards=document.getElementById("discard-cards");
-  const label=source==="forge"?"FORGE":"DISCARD";
+  const sub=document.getElementById("forge-select-sub");
+  const foot=document.getElementById("forge-select-foot");
+  const isForge=source==="forge";
+  sub.style.display=isForge?"":"none";
+  foot.style.display=isForge?"":"none";
+  const label=isForge?"FORGE":"DISCARD";
   title.textContent=p.toUpperCase()+" "+label+" ("+pile.length+")";
   cards.innerHTML="";
   if(!pile.length){
-    cards.innerHTML='<span style="font-size:9px;color:var(--txtd);font-style:italic">'+(source==="forge"?"No ore on the forge.":"Discard pile is empty.")+'</span>';
+    cards.innerHTML='<span style="font-size:9px;color:var(--txtd);font-style:italic">'+(isForge?"No ore on the forge.":"Discard pile is empty.")+'</span>';
   } else {
     pile.forEach(cid=>{
       const c=char.cards.find(x=>x.id===cid);if(!c)return;
       const st=cardStyle(c);
       const card=document.createElement("div");
-      card.className="hcard";
       card.dataset.cid=cid;card.dataset.player=p;
-      card.style.cssText=`background:${st.bg};border-color:${st.bdr};cursor:grab;width:116px;height:100px;flex-shrink:0`;
-      card.innerHTML=`<span class="hcn" style="color:${st.lbl}">${splitCardName(c.n)}</span><span class="hcart">${c.e||"🃏"}</span>${cpBadge(c,st)}`;
-      card.addEventListener("mousedown",e=>{
-        if(e.button!==0)return;
-        e.preventDefault();e.stopPropagation();
-        liftCardFromPile(p,cid,source,e.clientX,e.clientY);
-      });
+      if(isForge){
+        card.className="mine-card selectable";
+        card.style.cssText=`background:${st.bg};border-color:${st.bdr};width:116px;height:100px`;
+        card.innerHTML=`<span class="hcn" style="color:${st.lbl};font-size:11px">${splitCardName(c.n)}</span><span class="hcart" style="font-size:20px">${c.e||"🃏"}</span><span class="mine-check">✓</span>`;
+        card.addEventListener("click",()=>toggleForgeSelect(card,cid));
+      }else{
+        card.className="hcard";
+        card.style.cssText=`background:${st.bg};border-color:${st.bdr};cursor:grab;width:116px;height:100px;flex-shrink:0`;
+        card.innerHTML=`<span class="hcn" style="color:${st.lbl}">${splitCardName(c.n)}</span><span class="hcart">${c.e||"🃏"}</span>${cpBadge(c,st)}`;
+        card.addEventListener("mousedown",e=>{
+          if(e.button!==0)return;
+          e.preventDefault();e.stopPropagation();
+          liftCardFromPile(p,cid,source,e.clientX,e.clientY);
+        });
+      }
       cards.appendChild(card);
     });
   }
   panel.classList.add("open");
 }
 
+// Forge pile cards are selected by DOM element (not just id) since the same
+// ore id can appear multiple times in the pile (e.g. three Gold Ore cards).
+function toggleForgeSelect(card,cid){
+  if(forgeSelected.has(card)){
+    forgeSelected.delete(card);
+    card.classList.remove("selected");
+  }else{
+    forgeSelected.add(card);
+    card.classList.add("selected");
+  }
+}
+
 function closeDiscardPanel(){
   document.getElementById("discard-panel").classList.remove("open");
   discardPanelPlayer=null;
+  forgeSelected=new Set();
 }
 
 // Lift a card out of a pile (discard or forge) onto the overlay for dragging
@@ -2122,11 +2218,78 @@ function liftCardFromPile(player,cid,source,mx,my){
   });
 }
 
-// Update the ore-count badge on the forge ability card
+// ─── FORGE: CRAFT / SCRAP (with confirm step) ────────────────────────────────
+// action is "craft" (selected ore → bottom of deck) or "scrap" (→ discard pile)
+let pendingForgeAction=null; // {action,player,cids:[...]}
+
+function confirmForgeAction(action){
+  if(!discardPanelPlayer||discardPanelSource!=="forge")return;
+  if(!forgeSelected.size){alert("Select at least one ore first.");return;}
+  const cids=[...forgeSelected].map(card=>card.dataset.cid);
+  const player=discardPanelPlayer;
+  const char=S.chars[player];
+  pendingForgeAction={action,player,cids};
+  const title=document.getElementById("forge-confirm-title");
+  const sub=document.getElementById("forge-confirm-sub");
+  const list=document.getElementById("forge-confirm-list");
+  const goBtn=document.getElementById("forge-confirm-go");
+  const isCraft=action==="craft";
+  title.textContent=isCraft?"CRAFT — ARE YOU SURE?":"SCRAP — ARE YOU SURE?";
+  sub.textContent=isCraft
+    ?"These "+cids.length+" ore will be sent to the BOTTOM OF THE DECK:"
+    :"These "+cids.length+" ore will be sent to the DISCARD PILE:";
+  list.innerHTML="";
+  cids.forEach(cid=>{
+    const c=char.cards.find(x=>x.id===cid);if(!c)return;
+    const st=cardStyle(c);
+    const chip=document.createElement("span");
+    chip.className="confirm-chip";
+    chip.style.cssText=`background:${st.bg};border-color:${st.bdr};color:${st.lbl}`;
+    chip.textContent=(c.e||"🃏")+" "+c.n;
+    list.appendChild(chip);
+  });
+  goBtn.textContent=isCraft?"Craft — Send to Deck":"Scrap — Send to Discard";
+  goBtn.onclick=executeForgeAction;
+  document.getElementById("forge-confirm-panel").classList.add("open");
+}
+
+function executeForgeAction(){
+  if(!pendingForgeAction)return;
+  const{action,player,cids}=pendingForgeAction;
+  const P=S[player];
+  const forge=P.forge||[];
+  cids.forEach(cid=>{
+    const idx=forge.indexOf(cid);
+    if(idx>=0)forge.splice(idx,1);
+    if(action==="craft")P.deck.push(cid);
+    else P.discard.push(cid);
+  });
+  updateForgeDisplay(player);
+  if(action==="scrap")updateDiscardDisplay(player);
+  updateDrawBtn(player);
+  netSendCards(player);
+  closeForgeConfirm();
+  closeDiscardPanel();
+}
+
+function closeForgeConfirm(){
+  document.getElementById("forge-confirm-panel").classList.remove("open");
+  pendingForgeAction=null;
+}
+document.getElementById("forge-confirm-panel").addEventListener("mousedown",e=>{
+  if(e.target===document.getElementById("forge-confirm-panel"))closeForgeConfirm();
+});
+
+// Update the per-ore-type digits on the forge ability card. Ore card ids are
+// named "<type>_<n>" (e.g. "gold_3"), so the type is just the id's prefix.
 function updateForgeDisplay(player){
-  const n=(S[player].forge||[]).length;
-  const el=document.getElementById(player+"forge-n");
-  if(el)el.textContent=n;
+  const pile=S[player].forge||[];
+  const counts={gold:0,diamond:0,ultimanium:0};
+  pile.forEach(cid=>{const kind=cid.split("_")[0];if(counts[kind]!=null)counts[kind]++;});
+  ["gold","diamond","ultimanium"].forEach(kind=>{
+    const el=document.getElementById(player+"forge-n-"+kind);
+    if(el)el.textContent=counts[kind];
+  });
 }
 
 // ─── MINE / SEARCH (Forgemaster) ──────────────────────────────────────────────
@@ -2205,6 +2368,71 @@ function closeMinePanel(){
 }
 document.getElementById("mine-panel").addEventListener("mousedown",e=>{
   if(e.target===document.getElementById("mine-panel"))revealNoneMine();
+});
+
+// ── Haul (A Good Haul): peek top 3, select any number of ORE to place on the
+// Forge; the rest go to the bottom of the deck ───────────────────────────────
+let haulState=null; // {player, ids:[cid,...]}
+let haulSelected=new Set(); // selected DOM tiles
+
+function openHaulPanel(player){
+  if(NET.on&&player!==NET.me)return;
+  const P=S[player],char=S.chars[player];
+  if(!char||!P.deck.length)return;
+  const ids=P.deck.slice(0,3);
+  haulState={player,ids};
+  haulSelected=new Set();
+  const grid=document.getElementById("haul-cards");
+  grid.innerHTML="";
+  ids.forEach(cid=>{
+    const c=char.cards.find(x=>x.id===cid);
+    if(!c)return;
+    const st=cardStyle(c);
+    const pickable=!!c.ore;
+    const tile=document.createElement("div");
+    tile.className="mine-card "+(pickable?"selectable":"unpickable");
+    tile.dataset.cid=cid;
+    tile.style.cssText=`background:${st.bg};border-color:${st.bdr}`;
+    tile.innerHTML=`<span class="hcn" style="color:${st.lbl};font-size:11px">${splitCardName(c.n)}</span><span class="hcart" style="font-size:20px">${c.e||"🃏"}</span>`+(pickable?'<span class="mine-check">✓</span>':"");
+    if(pickable)tile.addEventListener("click",()=>{
+      if(haulSelected.has(tile)){haulSelected.delete(tile);tile.classList.remove("selected");}
+      else{haulSelected.add(tile);tile.classList.add("selected");}
+    });
+    grid.appendChild(tile);
+  });
+  document.getElementById("haul-panel").classList.add("open");
+}
+function confirmHaul(){
+  if(!haulState)return;
+  const{player,ids}=haulState;
+  const P=S[player];
+  const pickedCids=[...haulSelected].map(t=>t.dataset.cid);
+  const rest=ids.filter(id=>!pickedCids.includes(id));
+  P.deck.splice(0,ids.length);
+  P.deck.push(...rest);
+  if(!P.forge)P.forge=[];
+  P.forge.push(...pickedCids);
+  updateForgeDisplay(player);
+  netSendCards(player);
+  closeHaulPanel();
+  updateDrawBtn(player);
+}
+function revealNoneHaul(){
+  if(!haulState)return;
+  const{player,ids}=haulState;
+  const P=S[player];
+  P.deck.splice(0,ids.length);
+  P.deck.push(...ids);
+  netSendCards(player);
+  closeHaulPanel();
+  updateDrawBtn(player);
+}
+function closeHaulPanel(){
+  document.getElementById("haul-panel").classList.remove("open");
+  haulState=null;haulSelected=new Set();
+}
+document.getElementById("haul-panel").addEventListener("mousedown",e=>{
+  if(e.target===document.getElementById("haul-panel"))revealNoneHaul();
 });
 
 // ── Search: look through the whole deck, pick any ORE, then shuffle ─────────
@@ -2342,7 +2570,13 @@ function pullUpgradeCard(player,abilId){
   }
   netSendCards(player);
 }
-function flipView(){S.view=S.view==="p1"?"p2":"p1";hideTooltip();}
+function flipView(){
+  if(NET.room!=null)return; // multiplayer already auto-flips each player to their own bottom seat
+  S.view=S.view==="p1"?"p2":"p1";
+  document.getElementById("app").classList.toggle("flip");
+  autoSizeAbilCards();
+  hideTooltip();
+}
 function resetGame(){
   if(!confirm("Start a new game? This clears both players."))return;
   netSend({t:"reset"}); // tells the relay to wipe the room + the other player to reset
