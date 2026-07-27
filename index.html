@@ -1387,24 +1387,17 @@ function buildAbilCard(a,ab,upgraded,char,col,row,rowSpan,flexGrow){
         <button class="forge-open" onclick="event.stopPropagation();viewForge('${char._player}')">OPEN</button>
       </div>`
     :"";
-  // Search slot (Final Touches) / Haul slot (A Good Haul): a button placed
-  // inline right after the ability's damage badge (e.g. the "14"/"8" circle)
-  // so it shares that line instead of sitting in its own row below the text.
+  // Search slot (Final Touches) / Haul slot (A Good Haul): a button on its
+  // own line below the ability text (the text itself puts the damage badge
+  // on the line above it, e.g. "...THE FORGE. 14 Undefendable").
   const inlineBtn=ab.searchSlot
-    ?`<button class="forge-open" style="margin-left:5px;vertical-align:middle" onclick="event.stopPropagation();openSearchPanel('${char._player}')">SEARCH</button>`
+    ?`<button class="forge-open" onclick="event.stopPropagation();openSearchPanel('${char._player}')">SEARCH</button>`
     :ab.haulSlot
-    ?`<button class="haul-btn" onclick="event.stopPropagation();openHaulPanel('${char._player}')">HAUL</button>`
+    ?`<button class="haul-btn" style="margin-left:0" onclick="event.stopPropagation();openHaulPanel('${char._player}')">HAUL</button>`
     :"";
   let fxHTML=renderFxHTML(ab.fx,char);
   if(inlineBtn){
-    // Insert the button right after the last damage badge in the text.
-    const idx=Math.max(fxHTML.lastIndexOf("dmg-udf"),fxHTML.lastIndexOf("dmg-blk"));
-    if(idx>=0){
-      const closeIdx=fxHTML.indexOf("</span>",idx)+"</span>".length;
-      fxHTML=fxHTML.slice(0,closeIdx)+inlineBtn+fxHTML.slice(closeIdx);
-    }else{
-      fxHTML+=inlineBtn;
-    }
+    fxHTML+="<br>"+inlineBtn;
   }
   // Keep the name + badge on ONE line (no wrap) so the badge stays to the right;
   // the name font auto-shrinks later if it risks touching the card edges.
