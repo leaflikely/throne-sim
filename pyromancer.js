@@ -65,13 +65,85 @@ const ABIL=[
 ];
 
 // ─── UPGRADES ────────────────────────────────────────────────────────────────
-// None yet — to be added later.
-const ABIL2={};
-const CARD_UPGRADES={};
+// Pyromancer has a two-level upgrade system: each ability can go base → 2 or
+// base → 3 directly (level 2 is optional). If a level 2 is already on the
+// board, the matching level 3 card's CP cost is discounted by the level 2's
+// CP cost (handled by the board engine via the upgLevel property on cards).
+// ABIL2 is keyed by CARD id (not ability id) since one ability can have two
+// different upgrade defs; the engine checks card id first.
+const ABIL2={
+  p_pyro2:{n:"PYROBLAST 2",c:"#C83820",t:"off",
+    req:[{type:"flame",count:3},{type:"meteor",count:1}],
+    fx:"6 Blockable and roll 2 dice:\nAdd 3 dmg X {F}.\nOn {B}, inflict Burn.\nGain 2 X {S} Fire Mastery.\nOn {M}, inflict Knockdown."},
+  p_pyro3:{n:"PYROBLAST 3",c:"#C83820",t:"off",
+    req:[{type:"flame",count:3},{type:"meteor",count:1}],
+    fx:"6 Blockable and roll 2 dice:\nYou may re-roll 1:\nAdd 3 dmg X {F}.\nOn {B}, inflict Burn.\nGain 2 X {S} Fire Mastery.\nOn {M}, inflict Knockdown."},
+  p_molt2:{n:"MOLTEN ARMOR 2",c:"#1E6830",t:"def",defDice:5,
+    req:[],
+    fx:"Gain 1 Fire Mastery X {S}.\nOn {F}{B}, inflict Burn.\nDeal 1 Undefendable X {F}."},
+  p_molt3:{n:"MOLTEN ARMOR 3",c:"#1E6830",t:"def",defDice:5,
+    req:[],
+    fx:"Gain 1 Fire Mastery per {S} or {M}.\nOn {F}{B}, inflict Burn.\n1 Undefendable per {F} or {M}."},
+  p_fire2:{n:"FIREBALL 2",c:"#E07028",t:"off",
+    req:[{type:"flame",count:3}],hideReq:true,
+    fx:"{F}{F}{F} → 4 Blockable\n{F}{F}{F}{F} → 6 Blockable\n{F}{F}{F}{F}{F} → 8 Blockable\nGain 2 Fire Mastery."},
+  p_ign2:{n:"IGNITE 2",c:"#D84018",t:"off",
+    req:[{type:"text",label:"Large Straight"}],
+    fx:"Gain 2 Fire Mastery.\nInflict Burn.\nDeal 5 Blockable + (2 X Fire Mastery)."},
+  p_burn2:{n:"BURNING SOUL 2",c:"#E8A030",t:"off",
+    req:[{type:"soul",count:2}],
+    fx:"On {S}{S}{S}, inflict Burn.\nOn {S}{S}{S}{S}, increase Fire Mastery limit by 1.\nGain 2 X {S} Fire Mastery.\nDeal 1 Undefendable X {S}.",
+    sub:{n:"BLAZING SOUL",c:"#E8A030",
+      req:[{type:"blaze",count:2},{type:"soul",count:2}],
+      fx:"Increase Fire Mastery limit by 1.\nGain 5 Fire Mastery.\nInflict Knockdown."}},
+  p_comb2:{n:"COMBUSTION 2",c:"#B05018",t:"off",
+    req:[{type:"flame",count:1},{type:"blaze",count:1},{type:"soul",count:1},{type:"meteor",count:1}],
+    fx:"Gain 1 Fire Mastery.\nRemove up to 4 Fire Mastery and deal 4 Undefendable for each."},
+  p_hot2:{n:"HOT STREAK 2",c:"#E08828",t:"off",
+    req:[{type:"text",label:"Small Straight"}],
+    fx:"Gain 2 Fire Mastery.\n6 Blockable + (1 X Fire Mastery).",
+    sub:{n:"SCORCH",c:"#E08828",
+      req:[{type:"flame",count:2},{type:"blaze",count:2}],
+      fx:"Gain 2 Fire Mastery.\nInflict Burn. 6 Blockable."}},
+  p_met2:{n:"METEORITE 2",c:"#A04830",t:"off",
+    req:[{type:"meteor",count:4}],
+    fx:"Gain 2 Fire Mastery.\nInflict Stun.\n3 Undefendable + (1 X Fire Mastery).",
+    sub:{n:"METEOROID",c:"#A04830",
+      req:[{type:"meteor",count:3}],
+      fx:"Inflict Knockdown, Burn, and Stun."}},
+};
+
+// Card id → ability slot it upgrades (drop target on the board)
+const CARD_UPGRADES={
+  p_pyro2:"pyroblast", p_pyro3:"pyroblast",
+  p_molt2:"molten",    p_molt3:"molten",
+  p_fire2:"fireball",
+  p_ign2:"ignite",
+  p_burn2:"burnsoul",
+  p_comb2:"combustion",
+  p_hot2:"hotstreak",
+  p_met2:"meteorite",
+};
 
 // ─── CARDS ───────────────────────────────────────────────────────────────────
-// No unique cards yet — shared global cards only for now.
-const CARDS=[];
+// Unique cards. Upgrade cards carry upgLevel (2 or 3) — the engine uses it
+// for the level-3 CP discount and for allowing a 3 to replace a placed 2.
+const CARDS=[
+  {id:"p_pyro2",n:"PYROBLAST 2",   cp:2,t:"blue",upgLevel:2,e:"💥🎲",x:"UPGRADE Pyroblast: Deal 6 dmg and roll 2 dice. Add 3 dmg per Flame. On Blaze inflict Burn. Gain 2 Fire Mastery per Soul. On Meteor, inflict Knockdown."},
+  {id:"p_pyro3",n:"PYROBLAST 3",   cp:3,t:"blue",upgLevel:3,e:"💥💥",x:"UPGRADE Pyroblast: Deal 6 dmg and roll 2 dice, you may re-roll 1. Add 3 dmg per Flame. On Blaze inflict Burn. Gain 2 Fire Mastery per Soul. On Meteor, inflict Knockdown."},
+  {id:"p_molt2",n:"MOLTEN ARMOR 2",cp:1,t:"blue",upgLevel:2,e:"🛡🔥",x:"UPGRADE Molten Armor: Gain 1 Fire Mastery per Soul. On Flame+Blaze, inflict Burn. Deal 1 undefendable per Flame."},
+  {id:"p_molt3",n:"MOLTEN ARMOR 3",cp:3,t:"blue",upgLevel:3,e:"🛡🌋",x:"UPGRADE Molten Armor: Gain 1 Fire Mastery per Soul or Meteor. On Flame+Blaze, inflict Burn. 1 undefendable per Flame or Meteor."},
+  {id:"p_fire2",n:"FIREBALL 2",    cp:1,t:"blue",upgLevel:2,e:"🔥🎯",x:"UPGRADE Fireball: 3F→4, 4F→6, 5F→8 dmg. Gain 2 Fire Mastery."},
+  {id:"p_ign2", n:"IGNITE 2",      cp:2,t:"blue",upgLevel:2,e:"🔥📈",x:"UPGRADE Ignite (Large Straight): Gain 2 Fire Mastery. Inflict Burn. Deal 5 dmg plus 2 per Fire Mastery."},
+  {id:"p_burn2",n:"BURNING SOUL 2 + BLAZING SOUL",cp:1,t:"blue",upgLevel:2,e:"👤🔥",x:"UPGRADE Burning Soul (2 Souls): On 3 Souls inflict Burn. On 4 Souls increase Fire Mastery limit by 1. Gain 2 Fire Mastery per Soul. Deal 1 undefendable per Soul. ADDS Blazing Soul (2 Blaze + 2 Souls): Increase Fire Mastery limit by 1, gain 5 Fire Mastery, inflict Knockdown."},
+  {id:"p_comb2",n:"COMBUSTION 2",  cp:2,t:"blue",upgLevel:2,e:"⚙💣",x:"UPGRADE Combustion: Gain 1 Fire Mastery. Remove up to 4 Fire Mastery and deal 4 undefendable for each."},
+  {id:"p_hot2", n:"HOT STREAK 2 + SCORCH",cp:2,t:"blue",upgLevel:2,e:"🎰🔥",x:"UPGRADE Hot Streak (Small Straight): Gain 2 Fire Mastery. 6 dmg plus 1 per Fire Mastery. ADDS Scorch (2 Flame + 2 Blaze): Gain 2 Fire Mastery, inflict Burn, 6 dmg."},
+  {id:"p_met2", n:"METEORITE 2 + METEOROID",cp:2,t:"blue",upgLevel:2,e:"☄☄",x:"UPGRADE Meteorite (4 Meteors): Gain 2 Fire Mastery. Inflict Stun. 3 undefendable plus 1 per Fire Mastery. ADDS Meteoroid (3 Meteors): Inflict Knockdown, Burn, and Stun."},
+  {id:"p_redhot",n:"RED HOT!",     cp:1,t:"orange",e:"🌶🔥",x:"Add 1 dmg per Fire Mastery."},
+  {id:"p_warmup",n:"WARM UP",      cp:0,t:"blue",  e:"🔥☝",x:"Gain 1 Fire Mastery. Spend X CP, gain X Fire Mastery."},
+  {id:"p_fireup",n:"FIRE UP!",     cp:3,t:"blue",  e:"🔥⬆",x:"Increase Fire Mastery limit by 1. Gain 2 Fire Mastery."},
+  {id:"p_huzzah",n:"HUZZAH!",      cp:1,t:"orange",e:"🎉🎲",x:"Roll 1 die. Flame: add 3 dmg. Blaze: inflict Burn. Soul: gain 2 Fire Mastery. Meteor: inflict Knockdown."},
+];
 
 const GLOBAL_CARDS=[
   {id:"g_g1", n:"GET THAT OUTTA HERE!", cp:1,t:"blue",  e:"🚫⭐",x:"Remove a status effect token from a chosen player."},
