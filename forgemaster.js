@@ -60,9 +60,9 @@ const ABIL=[
            +`<span style="color:${smallCol};font-weight:700">Small Straight</span>: 7 Blockable\n`
            +`<span style="color:${largeCol};font-weight:700">Large Straight</span>: 10 Blockable`;
    }},
-  {id:"haul",   n:"A GOOD HAUL", c:"#28A050",t:"off",
+  {id:"haul",   n:"A GOOD HAUL", c:"#28A050",t:"off",haulSlot:true,
    req:[{type:"pickaxe",count:1},{type:"hammer",count:1},{type:"anvil",count:2}],
-   fx:"Mine your deck.\nYou may reveal all ORE mined this way and place them on THE FORGE.\n8 Blockable"},
+   fx:"Mine your deck.\nYou may reveal any number of ORE mined this way and place them on THE FORGE.\n8 Blockable"},
   {id:"smelt",  n:"SMELTING TIME",c:"#8040C8",t:"off",
    req:[{type:"anvil",count:4}],
    fx:"Draw 1 · 9 Undefendable"},
