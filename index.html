@@ -629,26 +629,39 @@ function cardHasCP(c){return !c.noCP;}
 // Effective CP cost of a card for a given player. Level-3 upgrade cards are
 // discounted by the CP cost of the matching level-2 upgrade if that level 2
 // is currently placed on the ability slot (you only pay the difference).
+// Returns {cost, discount} — discount is 0 when none applies.
 function effCP(player,c){
-  if(!player||c.upgLevel!==3)return c.cp;
-  const char=S.chars[player];
-  if(!char||!char.cardUpgrades)return c.cp;
-  const abilId=char.cardUpgrades[c.id];
-  const placed=abilId&&S.upgrades[player]&&S.upgrades[player][abilId];
-  if(!placed)return c.cp;
-  const placedCard=char.cards.find(k=>k.id===placed._cardId);
-  if(placedCard&&placedCard.upgLevel===2)return Math.max(0,c.cp-placedCard.cp);
-  return c.cp;
+  if(player&&c.upgLevel===3){
+    const char=S.chars[player];
+    if(char&&char.cardUpgrades){
+      const abilId=char.cardUpgrades[c.id];
+      const placed=abilId&&S.upgrades[player]&&S.upgrades[player][abilId];
+      if(placed){
+        const placedCard=char.cards.find(k=>k.id===placed._cardId);
+        if(placedCard&&placedCard.upgLevel===2){
+          const discount=Math.min(c.cp,placedCard.cp);
+          return{cost:c.cp-discount,discount};
+        }
+      }
+    }
+  }
+  return{cost:c.cp,discount:0};
+}
+// CP badge text: "3CP" normally, or "3-2CP" when a level-3 discount applies
+// (shows the original cost minus the discount, rather than just the result).
+function cpText(player,c){
+  const{cost,discount}=effCP(player,c);
+  return discount>0?(cost+discount)+"-"+discount+"CP":cost+"CP";
 }
 // Build the CP badge HTML (or empty string if the card has no cost).
 // Pass the owning player so level-3 discounts can be shown live.
 function cpBadge(c,st,player){
   if(!cardHasCP(c))return "";
-  return `<span class="hccp" style="color:${st.lbl};border-color:${st.bdr}">${effCP(player,c)}CP</span>`;
+  return `<span class="hccp" style="color:${st.lbl};border-color:${st.bdr}">${cpText(player,c)}</span>`;
 }
 function cpBadgeOv(c,st,player){
   if(!cardHasCP(c))return "";
-  return `<span class="card-ov-cp" style="color:${st.lbl};border-color:${st.bdr}">${effCP(player,c)}CP</span>`;
+  return `<span class="card-ov-cp" style="color:${st.lbl};border-color:${st.bdr}">${cpText(player,c)}</span>`;
 }
 // Refresh the CP number on every face-up board card for a player (called when
 // upgrades change, since that can change level-3 discounts).
@@ -659,7 +672,7 @@ function refreshCardOvCP(player){
     if(co.player!==player)return;
     const c=char.cards.find(k=>k.id===co.cid);if(!c)return;
     const badge=co.el.querySelector(".card-ov-cp");
-    if(badge)badge.textContent=effCP(player,c)+"CP";
+    if(badge)badge.textContent=cpText(player,c);
   });
 }
 
