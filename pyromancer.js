@@ -315,6 +315,7 @@ window.DT_CHARACTERS["pyromancer"] = {
   renderFormWidget:    renderFormWidget,
   initFormState:       initFormState,
   buildOverlayTokens:  buildOverlayTokens,
+  leaflet:             "Pyromancer_insert.png",
 };
 
 })();
