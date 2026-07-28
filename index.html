@@ -2648,7 +2648,7 @@ function pullUpgradeCard(player,abilId){
 function flipView(){
   if(NET.room!=null)return; // multiplayer already auto-flips each player to their own bottom seat
   S.view=S.view==="p1"?"p2":"p1";
-  document.getElementById("app").classList.toggle("flip");
+  document.body.classList.toggle("flip");
   autoSizeAbilCards();
   hideTooltip();
 }
@@ -3099,8 +3099,7 @@ function netDisconnect(){
 // ── Panel + status readout ───────────────────────────────────────────────────
 function applyFlip(){
   // When this browser plays P2, flip the whole board so P2 sits at the bottom
-  const app=document.getElementById("app");
-  if(app)app.classList.toggle("flip",NET.room!=null&&NET.me==="p2");
+  document.body.classList.toggle("flip",NET.room!=null&&NET.me==="p2");
   autoSizeAbilCards();
 }
 function updateNetHud(){
