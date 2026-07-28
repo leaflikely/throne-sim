@@ -38,6 +38,10 @@ button{font-family:inherit;cursor:pointer}
    was intentionally reclaimed. */
 #p2hand-zone{border-bottom:1px solid var(--bdrhi)}
 #p1hand-zone{border-top:1px solid var(--bdrhi)}
+/* Flipped: whichever zone is now on top needs the bottom border (facing the
+   shared tray below it), and whichever is now on bottom needs the top border. */
+.flip #p2hand-zone{border-bottom:none;border-top:1px solid var(--bdrhi)}
+.flip #p1hand-zone{border-top:none;border-bottom:1px solid var(--bdrhi)}
 /* P1 (bottom zone): dice nearest the outer edge → dice row on top of the zone,
    then HP/CP, then tokens nearest the tray. P2 (top zone) mirrors it. */
 #p1hand-zone{flex-direction:column}
@@ -1230,7 +1234,12 @@ function applyLayout(data){
     p2zone.dataset.lockedH=h;p2zone.style.height=h;
   }
   const zr=p1zone.getBoundingClientRect(); // shared reference rect for both players
+  const flipped=document.body.classList.contains("flip");
   ["p1","p2"].forEach(player=>{
+    // Whichever zone is visually at the TOP of the screen needs its "near
+    // center" direction mirrored (center/shared tray is below it, not above).
+    // Normally that's p2; flipping swaps which player that is.
+    const isTopZone=flipped?player==="p1":player==="p2";
     LAYOUT_OBJS.forEach(obj=>{
       const el=layoutObjEl(player,obj);if(!el)return;
       const d=data[obj];if(!d)return;
@@ -1239,9 +1248,10 @@ function applyLayout(data){
       // instead of rendering a giant or off-screen box.
       const wf=Math.max(0.02,Math.min(1,d.wf)),hf=Math.max(0.02,Math.min(1,d.hf));
       let xf=Math.max(0,Math.min(1-wf,d.xf)),yf=Math.max(0,Math.min(1-hf,d.yf));
-      if(player==="p2"){
+      if(isTopZone){
         // Mirror vertically within the zone: flip distance from the top edge
-        // to distance from the bottom edge (P2's zone is P1's zone flipped).
+        // to distance from the bottom edge (this zone's "near center" side
+        // is its own bottom edge, not its top).
         yf=1-yf-hf;
       }
       el.style.position="absolute";
@@ -3115,6 +3125,7 @@ function netDisconnect(){
 function applyFlip(){
   // When this browser plays P2, flip the whole board so P2 sits at the bottom
   document.body.classList.toggle("flip",NET.room!=null&&NET.me==="p2");
+  loadSavedLayout();
   autoSizeAbilCards();
 }
 function updateNetHud(){
