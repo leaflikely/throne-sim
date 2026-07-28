@@ -261,10 +261,14 @@ function placeDruidTokens(player) {
     baseY = r.top + r.height / 2 - 16;
   }
 
-  // Second row goes below the wounds for P1 (bottom playspace) but above them
-  // for P2 (top playspace), so the two players' token clusters mirror each
-  // other: for both, the Regen row sits on the side nearer the game board.
-  const regenDY = player === "p1" ? 48 : -48;
+  // Second row goes below the wounds for whichever zone is at the BOTTOM of
+  // the screen, above the wounds for whichever is at the TOP — so for both
+  // players, the Regen row sits on the side nearer the game board. Based on
+  // current screen position (which flips with Flip View / multiplayer
+  // seating), not raw player identity, so this stays correct either way.
+  const flipped = document.body.classList.contains("flip");
+  const isBottomZone = flipped ? player === "p2" : player === "p1";
+  const regenDY = isBottomZone ? 48 : -48;
 
   // Wound row (anchored at baseY for both players)
   for (let i = 0; i < 2; i++) {
