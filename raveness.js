@@ -196,9 +196,11 @@ function buildOverlayTokens(player, addFn, removeFn) {
   const color = NM_COLORS[player];
   const pLabel = player === "p1" ? "P1" : "P2";
 
-  // Position: p1 → lower play space, p2 → upper play space, mirrored exactly
-  // — p1 sits the same distance up from the window's bottom edge as p2 sits
-  // down from the top edge, so neither overlaps nearby playspace elements.
+  // Position: whichever zone sits at the BOTTOM of the screen gets the lower
+  // spot, whichever sits at the TOP gets the upper spot — mirrored exactly so
+  // neither overlaps nearby playspace elements. Based on current screen
+  // position (which flips with Flip View / multiplayer seating), not raw
+  // player identity, so this stays correct either way.
   // X is computed relative to the right-hand play space panel (not the full
   // window) so it lands in the same visual spot regardless of panel width.
   const W = window.innerWidth, H = window.innerHeight;
@@ -206,8 +208,10 @@ function buildOverlayTokens(player, addFn, removeFn) {
   const panelW = panelEl ? panelEl.getBoundingClientRect().width : Math.round(W*0.304);
   const panelLeft = W - panelW;
   const x = Math.round(panelLeft + panelW*0.305 - 32); // 32 = half the 64px circle
-  const nmTopOffset = Math.round(H * 0.128 - 32); // p2's spawn, measured from the top
-  const y = player === "p1" ? (H - (nmTopOffset + 64)) : nmTopOffset;
+  const flipped = document.body.classList.contains("flip");
+  const isBottomZone = flipped ? player === "p2" : player === "p1";
+  const nmTopOffset = Math.round(H * 0.128 - 32); // upper zone's spawn, measured from the top
+  const y = isBottomZone ? (H - (nmTopOffset + 64)) : nmTopOffset;
 
   const el = document.createElement("div");
   el.className = "nm-outer";
