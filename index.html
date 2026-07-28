@@ -252,12 +252,6 @@ button{font-family:inherit;cursor:pointer}
 /* Flipped view — used when THIS browser is Player 2, so P2 always sits at the bottom */
 .flip #center-block{flex-direction:column-reverse}
 .flip #right-panel{flex-direction:column-reverse}
-/* Flipped: P2's zone is now at the bottom, so its dice should face the bottom
-   edge (column order); P1's zone is now at top and reverses. */
-.flip #p2hand-zone{flex-direction:column}
-.flip #p1hand-zone{flex-direction:column-reverse}
-.flip #p2hand-zone .ps-dice-stack{flex-direction:column!important}
-.flip #p1hand-zone .ps-dice-stack{flex-direction:column-reverse!important}
 .flip #p1hand{top:46px;bottom:auto;border-top:none;border-bottom:1px solid var(--bdr);align-items:flex-end}
 .flip #p2hand{bottom:0;top:auto;border-bottom:none;border-top:1px solid var(--bdr);align-items:flex-start}
 .hcard{width:116px;height:calc(var(--hand-h) - 10px);border-radius:6px;border:1.5px solid;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:6px 5px 5px;position:relative;flex-shrink:0}
@@ -2649,8 +2643,29 @@ function flipView(){
   if(NET.room!=null)return; // multiplayer already auto-flips each player to their own bottom seat
   S.view=S.view==="p1"?"p2":"p1";
   document.body.classList.toggle("flip");
+  loadSavedLayout(); // layout-obj positions are computed relative to each
+                      // zone's own rect, so they need to refresh here too
+  mirrorOverlaysOnFlip(); // draggable tokens/cards live in raw window pixel
+                           // coordinates and don't move with their zone —
+                           // mirror them vertically so they flip along too
   autoSizeAbilCards();
   hideTooltip();
+}
+// Vertically mirror every draggable overlay token and board card around the
+// window's center, so Flip View moves them along with everything else
+// instead of leaving them pinned to their pre-flip spot.
+function mirrorOverlaysOnFlip(){
+  const H=window.innerHeight;
+  Object.values(OV_TOKENS).forEach(t=>{
+    const h=t.el.getBoundingClientRect().height||36;
+    t.y=Math.round(H-t.y-h);
+    t.el.style.top=t.y+"px";
+  });
+  Object.values(CARD_OV).forEach(co=>{
+    const h=co.el.getBoundingClientRect().height||126;
+    co.y=Math.round(H-co.y-h);
+    co.el.style.top=co.y+"px";
+  });
 }
 function resetGame(){
   if(!confirm("Start a new game? This clears both players."))return;
